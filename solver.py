@@ -37,7 +37,7 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).parent
-CAP = 7  # depth limit for the best-average search; see README
+CAP = 6  # depth limit for the best-average search; cap 7 gives identical totals for every opener
 
 ELEMENTS = list(csv.DictReader((HERE / "elements.csv").open(encoding="utf-8")))
 N = len(ELEMENTS)
@@ -146,6 +146,16 @@ def depths(tree: dict) -> dict[int, int]:
     return out
 
 
+def only_possible(tree: dict, cands: list[int] | None = None) -> bool:
+    """True if every guess in the tree is still possible when it is made."""
+    cands = list(range(N)) if cands is None else cands
+    g = tree["g"] - 1
+    if g not in cands:
+        return False
+    return all(only_possible(sub, [s for s in cands if s != g and FB[g][s] == key])
+               for key, sub in tree["k"].items())
+
+
 def summarize(tree: dict) -> dict:
     ds = depths(tree)
     hist: dict[int, int] = {}
@@ -165,20 +175,24 @@ def main() -> None:
     hard = run_search(hard=True)
     print(f"hard-mode search done ({time.time() - t0:.0f}s): worst case {hard['W']}")
 
-    same = all(o["total_at_worst"] == h["total_at_worst"] and o["worst"] == h["worst"]
-               for o, h in zip(normal["openers"], hard["openers"]))
-    best = hard if same else normal
-    print("hard mode is as good as free guessing" if same else "free guessing beats hard mode")
+    def prefer_hard(key: str) -> dict:
+        """The hard-mode tree when it scores the same, so every guess shown
+        could be the answer."""
+        h, n = hard["trees"][key], normal["trees"][key]
+        sh, sn = summarize(h), summarize(n)
+        return h if (sh["worst"], sh["average"]) == (sn["worst"], sn["average"]) else n
+
     trees = [
-        ("optimal", "Optimal", best["trees"]["minimax"]),
+        ("optimal", "Optimal", prefer_hard("minimax")),
         ("average", "Best average", normal["trees"]["average"]),
         ("greedy", "Rule of thumb", greedy_tree(list(range(N)))),
         ("binary", "Binary search", binary_tree(list(range(N)))),
-        ("tantalum", "Tantalum opener", best["trees"]["tantalum"]),
+        ("tantalum", "Tantalum opener", prefer_hard("tantalum")),
     ]
     strategies = {}
     for key, label, tree in trees:
         strategies[key] = {"label": label, **summarize(tree), "tree": tree}
+        strategies[key]["only_possible"] = only_possible(tree)
     if strategies["average"]["average"] >= strategies["optimal"]["average"]:
         del strategies["average"]  # no gain from allowing a deeper worst case
     for s in strategies.values():
@@ -202,7 +216,7 @@ def main() -> None:
             "largest": largest,
         })
 
-    out = {"optimal_worst": normal["W"], "hard_worst": hard["W"], "hard_same": same, "cap": CAP,
+    out = {"optimal_worst": normal["W"], "hard_worst": hard["W"], "cap": CAP,
            "strategies": strategies, "openers": openers}
     (HERE / "strategies.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print(f"wrote strategies.json ({time.time() - t0:.0f}s)")

@@ -137,16 +137,16 @@ input[type="search"] {
 }
 .gaprow { grid-column: 1 / -1; }
 
-.cat-alkali { --c: var(--c-alkali); }
-.cat-alkaline { --c: var(--c-alkaline); }
-.cat-transition { --c: var(--c-transition); }
-.cat-post { --c: var(--c-post); }
-.cat-metalloid { --c: var(--c-metalloid); }
-.cat-nonmetal { --c: var(--c-nonmetal); }
-.cat-halogen { --c: var(--c-halogen); }
-.cat-noble { --c: var(--c-noble); }
-.cat-lanthanide { --c: var(--c-lanthanide); }
-.cat-actinide { --c: var(--c-actinide); }
+.cat-alkali.cat-alkali { --c: var(--c-alkali); }
+.cat-alkaline.cat-alkaline { --c: var(--c-alkaline); }
+.cat-transition.cat-transition { --c: var(--c-transition); }
+.cat-post.cat-post { --c: var(--c-post); }
+.cat-metalloid.cat-metalloid { --c: var(--c-metalloid); }
+.cat-nonmetal.cat-nonmetal { --c: var(--c-nonmetal); }
+.cat-halogen.cat-halogen { --c: var(--c-halogen); }
+.cat-noble.cat-noble { --c: var(--c-noble); }
+.cat-lanthanide.cat-lanthanide { --c: var(--c-lanthanide); }
+.cat-actinide.cat-actinide { --c: var(--c-actinide); }
 
 /* the bay above the transition metals */
 .bay {
@@ -735,7 +735,7 @@ function renderResearch() {
     </div></div>`;
   const vars = { W: DATA.optimal_worst, bestW: bestW.symbol, bestWname: el(bestW.z).name, bestWavg: bestW.avg_at_worst.toFixed(3),
     bestA: bestA.symbol, bestAname: el(bestA.z).name, bestAavg: bestA.avg_free.toFixed(3), bestAworst: bestA.worst,
-    taWorst: ta.worst, taAvg: ta.avg_free.toFixed(3), taAvgW: ta.avg_at_worst.toFixed(3), taRank: rankAvg, nWorstOpt, taClasses: ta.groups, taLargest: ta.largest };
+    taWorst: ta.worst, taAvg: ta.avg_free.toFixed(3), taAvgW: ta.avg_at_worst.toFixed(3), taRank: rankAvg, nWorstOpt, taClasses: ta.groups, taLargest: ta.largest, nDiffer: O.filter(o => o.avg_free < o.avg_at_worst).length };
   research.querySelector(".prose").innerHTML = research.querySelector(".prose").innerHTML.replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k] : m);
 }
 function openerChart(list) {
