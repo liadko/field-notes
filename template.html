@@ -347,7 +347,7 @@ function partition(cands, g) {
 
 /* ---------- strategy trees ---------- */
 const STRATS = DATA.strategies;
-const STRAT_KEYS = ["minimax", "average", "binary", "tantalum"];
+const STRAT_KEYS = ["optimal", "average", "hard", "binary", "tantalum"].filter(k => STRATS[k]);
 const depthCache = {};
 function depthMap(key) {
   if (depthCache[key]) return depthCache[key];
@@ -394,7 +394,7 @@ const state = {
   cat: null,
   query: "",
   game: { secret: null, guesses: [], picking: false, revealed: false },
-  strat: { key: "minimax", secret: null, step: null, overlay: "depth" },
+  strat: { key: "optimal", secret: null, step: null, overlay: "depth" },
 };
 function newGame(secret = null) {
   state.game = { secret: secret ?? ALL[Math.floor(Math.random() * N)], guesses: [], picking: false, revealed: false };
@@ -582,9 +582,9 @@ toolbar.addEventListener("input", ev => {
    pick the guess whose biggest leftover group is smallest. */
 function hint() {
   const g = state.game, rem = consistent(g.guesses);
-  let node = STRATS.minimax.tree;
+  let node = STRATS.optimal.tree;
   for (const x of g.guesses) { if (!node || node.g !== x.z) { node = null; break; } node = node.k[x.fb]; }
-  if (node) return { z: node.g, how: "From the best-worst-case strategy, which you are following exactly." };
+  if (node) return { z: node.g, how: "This is the optimal strategy's move. You are still on its path." };
   if (rem.length === 1) return { z: rem[0], how: "Only one element fits." };
   let best = null;
   for (const z of ALL) {
@@ -729,12 +729,12 @@ function renderResearch() {
     <div class="panel" style="margin-top:20px">
       <p class="eyebrow">Every opener, ranked by average with the best follow-up</p>
       <h3>How good is each first guess?</h3>
-      <p class="muted" style="margin:0 0 10px;font-size:var(--step--1)">Bar length is the average number of guesses. Color shows the best worst case reachable after that opener. Tantalum ranks ${rankAvg} of 118.</p>
+      <p class="muted" style="margin:0 0 10px;font-size:var(--step--1)">Bar length is the average number of guesses with the best follow-up. Green bars can still guarantee ${DATA.optimal_worst} guesses; amber bars need ${DATA.optimal_worst + 1} in their worst case. Tantalum ranks ${rankAvg} of 118.</p>
       <div class="scroll-x">${openerChart(byAvg)}</div>
     </div></div>`;
   const vars = { W: DATA.optimal_worst, bestW: bestW.symbol, bestWname: el(bestW.z).name, bestWavg: bestW.avg_at_worst.toFixed(3),
     bestA: bestA.symbol, bestAname: el(bestA.z).name, bestAavg: bestA.avg_free.toFixed(3), bestAworst: bestA.worst,
-    taWorst: ta.worst, taAvg: ta.avg_free.toFixed(3), taAvgW: ta.avg_at_worst.toFixed(3), taRank: rankAvg, nWorstOpt, taClasses: ta.classes, taLargest: ta.largest };
+    taWorst: ta.worst, taAvg: ta.avg_free.toFixed(3), taAvgW: ta.avg_at_worst.toFixed(3), taRank: rankAvg, nWorstOpt, taClasses: ta.groups, taLargest: ta.largest };
   research.querySelector(".prose").innerHTML = research.querySelector(".prose").innerHTML.replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k] : m);
 }
 function openerChart(list) {
@@ -742,7 +742,7 @@ function openerChart(list) {
   const rowH = 17, left = 112, w = 760, h = top.length * rowH + 26;
   const lo = Math.floor(top[0].avg_free * 10) / 10 - 0.05, hi = Math.ceil(top[top.length - 1].avg_free * 10) / 10;
   const x = v => left + ((v - lo) / (hi - lo)) * (w - left - 60);
-  const colors = { 3: "var(--hit)", 4: "var(--hit)", 5: "var(--near)", 6: "var(--bad)", 7: "var(--bad)" };
+  const colors = { 4: "var(--hit)", 5: "var(--hit)", 6: "var(--near)", 7: "var(--bad)" };
   const ticks = []; for (let t = Math.ceil(lo * 10) / 10; t <= hi + 1e-9; t += 0.1) ticks.push(t);
   return `<svg class="opener-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Top 40 openers by average guesses" style="min-width:560px">
     ${ticks.map(t => `<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="${h - 20}" stroke="var(--line)"/><text x="${x(t)}" y="${h - 6}" text-anchor="middle">${t.toFixed(1)}</text>`).join("")}
