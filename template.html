@@ -320,11 +320,10 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
    dir u = secret higher, d = lower, = solved; cat 1 = same category. */
 function feedback(gz, sz) {
   const gs = el(gz).symbol.toLowerCase(), ss = el(sz).symbol.toLowerCase();
-  const colors = Array(gs.length).fill("x"), left = [];
-  for (let i = 0; i < gs.length; i++) {
-    if (i < ss.length && ss[i] === gs[i]) colors[i] = "g";
-    else if (i < ss.length) left.push(ss[i]);
-  }
+  const colors = [...gs].map((ch, i) => (i < ss.length && ss[i] === ch ? "g" : "x"));
+  // Secret letters not matched in place, including any past the guess's
+  // length: guessing C against Sc gives a yellow C.
+  const left = [...ss].filter((ch, i) => !(i < gs.length && gs[i] === ch));
   for (let i = 0; i < gs.length; i++) {
     const j = left.indexOf(gs[i]);
     if (colors[i] === "x" && j >= 0) { colors[i] = "y"; left.splice(j, 1); }

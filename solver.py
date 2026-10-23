@@ -53,13 +53,10 @@ def feedback(g: int, s: int) -> str:
     cat is 1 (same category) or 0. Mirrors feedback() in the HTML page.
     """
     gs, ss = SYM[g].lower(), SYM[s].lower()
-    colors = ["x"] * len(gs)
-    left = []
-    for i, ch in enumerate(gs):
-        if i < len(ss) and ss[i] == ch:
-            colors[i] = "g"
-        elif i < len(ss):
-            left.append(ss[i])
+    colors = ["g" if i < len(ss) and ss[i] == ch else "x" for i, ch in enumerate(gs)]
+    # Secret letters not matched in place, including any past the guess's
+    # length: guessing C against Sc gives a yellow C.
+    left = [ch for i, ch in enumerate(ss) if not (i < len(gs) and gs[i] == ch)]
     for i, ch in enumerate(gs):
         if colors[i] == "x" and ch in left:
             colors[i] = "y"
