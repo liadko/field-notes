@@ -347,12 +347,13 @@ function partition(cands, g) {
 
 /* ---------- strategy trees ---------- */
 const STRATS = DATA.strategies;
-const STRAT_KEYS = ["optimal", "average", "hard", "binary", "tantalum"].filter(k => STRATS[k]);
+const STRAT_KEYS = ["optimal", "average", "greedy", "binary", "tantalum"].filter(k => STRATS[k]);
 const depthCache = {};
 function depthMap(key) {
   if (depthCache[key]) return depthCache[key];
+  // Replay each secret: a tree may guess a ruled-out element at several nodes.
   const out = {};
-  (function walk(node, d) { out[node.g] = d; for (const sub of Object.values(node.k)) walk(sub, d + 1); })(STRATS[key].tree, 1);
+  for (const s of ALL) out[s] = playOut(key, s).length;
   return (depthCache[key] = out);
 }
 function playOut(key, secret) {

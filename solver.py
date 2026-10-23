@@ -11,13 +11,17 @@ A guess counts once; finding the secret on guess k costs k. The search itself
 is in search.cpp (compiled with g++ on first run); this script supplies the
 rules, builds the simple strategies and writes strategies.json:
 
-  * optimal:  fewest guesses in the worst case, then lowest average. Any
-              element may be guessed, even one already ruled out.
+  * optimal:  fewest guesses in the worst case, then lowest average.
   * average:  lowest average with no worst-case limit (up to CAP guesses).
               Only written when it beats the optimal strategy's average.
-  * hard:     same objective, but every guess must still be possible.
+  * greedy:   a rule of thumb: guess whatever leaves the smallest worst-case
+              group, preferring elements that are still possible.
   * binary:   always guess the middle remaining candidate by atomic number.
   * tantalum: open with Ta, then play optimally.
+
+The search runs twice: once allowing any guess and once in hard mode (every
+guess must still be possible). When hard mode is just as good, its trees are
+used, so every guess shown could be the answer.
 
 It also records, for every opener, its worst case and average under the best
 follow-up.
@@ -107,17 +111,43 @@ def binary_tree(cands: list[int]) -> dict:
     return node
 
 
-def depths(tree: dict, d: int = 1, out=None) -> dict:
-    out = {} if out is None else out
-    out[tree["g"]] = d
-    for sub in tree["k"].values():
-        depths(sub, d + 1, out)
+def greedy_tree(cands: list[int]) -> dict:
+    """Guess whatever leaves the smallest worst-case group; break ties by the
+    smaller expected group, then prefer a guess that is still possible."""
+    if len(cands) == 1:
+        return {"g": cands[0] + 1, "k": {}}
+    inside = set(cands)
+    best = None
+    for g in range(N):
+        groups: dict[str, list[int]] = {}
+        for s in cands:
+            if s != g:
+                groups.setdefault(FB[g][s], []).append(s)
+        if g not in inside and len(groups) < 2:
+            continue
+        sizes = [len(v) for v in groups.values()]
+        score = (max(sizes, default=0), sum(x * x for x in sizes), g not in inside)
+        if best is None or score < best[0]:
+            best = (score, g, groups)
+    _, g, groups = best
+    return {"g": g + 1, "k": {key: greedy_tree(sub) for key, sub in groups.items()}}
+
+
+def depths(tree: dict) -> dict[int, int]:
+    """Guesses the tree needs for each secret (1-based), found by replaying
+    it. A tree may guess an element that is already ruled out, so the same
+    element can appear at several nodes; only the replay gives its depth."""
+    out = {}
+    for s in range(N):
+        node, d = tree, 1
+        while node["g"] != s + 1:
+            node, d = node["k"][FB[node["g"] - 1][s]], d + 1
+        out[s + 1] = d
     return out
 
 
 def summarize(tree: dict) -> dict:
     ds = depths(tree)
-    assert sorted(ds) == list(range(1, N + 1)), "tree must find every element"
     hist: dict[int, int] = {}
     for v in ds.values():
         hist[v] = hist.get(v, 0) + 1
@@ -135,12 +165,16 @@ def main() -> None:
     hard = run_search(hard=True)
     print(f"hard-mode search done ({time.time() - t0:.0f}s): worst case {hard['W']}")
 
+    same = all(o["total_at_worst"] == h["total_at_worst"] and o["worst"] == h["worst"]
+               for o, h in zip(normal["openers"], hard["openers"]))
+    best = hard if same else normal
+    print("hard mode is as good as free guessing" if same else "free guessing beats hard mode")
     trees = [
-        ("optimal", "Optimal", normal["trees"]["minimax"]),
+        ("optimal", "Optimal", best["trees"]["minimax"]),
         ("average", "Best average", normal["trees"]["average"]),
-        ("hard", "Hard mode", hard["trees"]["minimax"]),
+        ("greedy", "Rule of thumb", greedy_tree(list(range(N)))),
         ("binary", "Binary search", binary_tree(list(range(N)))),
-        ("tantalum", "Tantalum opener", normal["trees"]["tantalum"]),
+        ("tantalum", "Tantalum opener", best["trees"]["tantalum"]),
     ]
     strategies = {}
     for key, label, tree in trees:
@@ -168,7 +202,7 @@ def main() -> None:
             "largest": largest,
         })
 
-    out = {"optimal_worst": normal["W"], "hard_worst": hard["W"], "cap": CAP,
+    out = {"optimal_worst": normal["W"], "hard_worst": hard["W"], "hard_same": same, "cap": CAP,
            "strategies": strategies, "openers": openers}
     (HERE / "strategies.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print(f"wrote strategies.json ({time.time() - t0:.0f}s)")
