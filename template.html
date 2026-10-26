@@ -885,14 +885,21 @@ research.addEventListener("click", ev => {
   if (tr) { setStrategy(tr.dataset.strat); render(); }
 });
 
-/* Clicking blank space in Explore clears the pinned element and any
-   highlighted group; clicks on tiles, text, panels and controls don't count. */
+/* In Explore, double-clicking a tile or clicking blank space unpins the
+   element. A highlighted category or collection stays, and its details
+   come back. Clicks on text, panels and controls don't count as blank. */
 const BLANK = "html, body, main, .wrap, .toolbar, .table-scroll, .ptable, .gaprow, .slot, .legend, .legend-row, #below, .below";
-document.addEventListener("click", ev => {
-  if (state.mode !== "explore" || !ev.target.matches(BLANK)) return;
-  if (state.sel == null && !state.group) return;
-  state.sel = null; state.group = null; state.focus = "element";
+function unpin() {
+  if (state.sel == null) return;
+  state.sel = null;
+  state.focus = state.group ? "group" : "element";
   render();
+}
+document.addEventListener("click", ev => {
+  if (state.mode === "explore" && ev.target.matches(BLANK)) unpin();
+});
+table.addEventListener("dblclick", ev => {
+  if (state.mode === "explore" && ev.target.closest(".tile")) unpin();
 });
 
 /* ---------- mode & render ---------- */
