@@ -171,7 +171,28 @@ input[type="search"] {
 .card .fact::before { content: "Fun fact  "; font: 600 11px/1 var(--font-body); color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
 
 /* ---------- legend ---------- */
-.legend { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 0; }
+.legend { margin: 16px 0 0; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.legend-row + .legend-row { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.legend-label { font: 600 11px/1 var(--font-body); color: var(--muted); letter-spacing: .1em; text-transform: uppercase; width: 100px; flex: none; }
+.legend .collections button { background: transparent; border-style: dashed; color: var(--fg); }
+.legend .collections button[aria-pressed="true"] { border: 1px solid var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.gcard { --c: var(--accent); display: flex; flex-direction: column; gap: 6px; }
+.gcard .eyebrow { display: flex; align-items: center; gap: 8px; margin: 0; }
+.gcard .swatch { width: 12px; height: 12px; background: var(--c); border-radius: 1px; }
+.gcard h2 { margin: 0; font: 700 var(--step-3)/1 var(--font-display); letter-spacing: -0.02em; color: var(--c); }
+.gcard .gsum { margin: 0; max-width: 64ch; }
+.firsts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 4px; }
+.firsts .lab { font: 600 11px/1 var(--font-body); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.firsts .when { font: 500 var(--step--1)/1 var(--font-data); color: var(--fg); margin-right: 14px; }
+.gprose p { margin: 0 0 14px; }
+.gprose .eyebrow { margin: 0 0 6px; }
+.timeline { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.tl-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: center; }
+.tl-year { font: 500 var(--step--1)/1 var(--font-data); color: var(--muted); text-align: right; }
+.inchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.inchip { background: transparent; border: 1px dashed var(--line); border-radius: 2px; padding: 5px 9px; font-size: var(--step--1); }
+.inchip:hover { border-color: var(--accent); color: var(--accent); }
 .legend button {
   --c: var(--faint); display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 2px;
   background: var(--panel); border: 1px solid var(--line); font-size: var(--step--1); color: var(--fg);
@@ -282,6 +303,7 @@ button.group:last-child { border-bottom: 0; }
 .opener-chart text { fill: var(--muted); font: 10px var(--font-data); }
 .opener-chart .lbl { fill: var(--fg); font: 600 11px var(--font-display); }
 
+@media (max-width: 600px) { .legend-label { width: 100%; } .tl-row { grid-template-columns: 70px minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
@@ -307,6 +329,7 @@ button.group:last-child { border-bottom: 0; }
 <script>
 const ELEMENTS = /*__ELEMENTS__*/null;
 const DATA = /*__STRATEGIES__*/null;
+const GROUPS = /*__GROUPS__*/null;
 
 const CATS = [
   ["alkali metal", "alkali", "Alkali metal"],
@@ -322,6 +345,9 @@ const CATS = [
 ];
 const CAT_CLASS = Object.fromEntries(CATS.map(([k, c]) => [k, c]));
 const CAT_LABEL = Object.fromEntries(CATS.map(([k, , l]) => [k, l]));
+const CAT_PLURAL = { "alkali metal": "Alkali metals", "alkaline earth metal": "Alkaline earth metals", "transition metal": "Transition metals",
+  "post-transition metal": "Post-transition metals", "metalloid": "Metalloids", "reactive nonmetal": "Reactive nonmetals", "halogen": "Halogens",
+  "noble gas": "Noble gases", "lanthanide": "Lanthanides", "actinide": "Actinides" };
 const N = ELEMENTS.length;
 const el = z => ELEMENTS[z - 1];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -411,11 +437,34 @@ function miniHTML(z, clickable = false) {
   return `<${tag} class="mini cat-${CAT_CLASS[e.category]}" ${clickable ? `data-z="${z}" title="${esc(e.name)}"` : `title="${esc(e.name)}"`}>${esc(e.symbol)}</${tag}>`;
 }
 
+/* ---------- categories & collections ---------- */
+const COLLECTIONS = Object.fromEntries(GROUPS.collections.map(c => [c.id, c]));
+function groupOf(g) {
+  if (g.kind === "cat") {
+    const info = GROUPS.categories[g.id];
+    return { kindLabel: "Category", name: CAT_PLURAL[g.id], cls: `cat-${CAT_CLASS[g.id]}`, summary: info.summary,
+      sections: [["History", info.history], ["Where the edges are", info.edges], ["How to remember", info.remember]],
+      members: ELEMENTS.filter(e => e.category === g.id).map(e => e.number) };
+  }
+  const c = COLLECTIONS[g.id];
+  return { kindLabel: "Collection", name: c.name, cls: "", summary: c.detail, sections: [], members: [...c.members].sort((a, b) => a - b) };
+}
+const yearKey = z => el(z).year ?? -1e5;
+function firstAndLatest(members) {
+  const keys = members.map(yearKey), lo = Math.min(...keys), hi = Math.max(...keys);
+  return { first: members.filter(z => yearKey(z) === lo), latest: members.filter(z => yearKey(z) === hi) };
+}
+function whenHTML(list) {
+  return `${list.map(z => miniHTML(z, true)).join("")}<span class="when">${esc(el(list[0]).year_label)}</span>`;
+}
+function collectionsOf(z) { return GROUPS.collections.filter(c => c.members.includes(z)); }
+
 /* ---------- state ---------- */
 const state = {
   mode: "explore",
   sel: 73,
-  cat: null,
+  group: null,      // { kind: "cat" | "col", id }
+  focus: "element", // what the explore details show: "element" or "group"
   query: "",
   game: { secret: null, guesses: [], picking: false, revealed: false },
   strat: { key: "optimal", path: [], secret: null, overlay: "depth" },
@@ -448,6 +497,8 @@ const tiles = {};
   table.appendChild(frag);
 })();
 table.addEventListener("click", ev => {
+  const mini = ev.target.closest("#bay button.mini");
+  if (mini) { state.sel = Number(mini.dataset.z); state.focus = "element"; render(); return; }
   const t = ev.target.closest(".tile"); if (!t) return;
   onTile(Number(t.dataset.z));
 });
@@ -459,7 +510,7 @@ table.addEventListener("mouseover", ev => {
 table.addEventListener("mouseleave", () => { if (state.mode === "explore") renderBay(); });
 
 function onTile(z) {
-  if (state.mode === "explore") { state.sel = z; }
+  if (state.mode === "explore") { state.sel = z; state.focus = "element"; }
   else if (state.mode === "play") {
     const g = state.game;
     if (g.picking) { newGame(z); }
@@ -492,11 +543,12 @@ function paintTiles() {
     else { remaining = new Set(v.pool); current = v.node.g; }
   }
   const q = state.query.trim().toLowerCase();
+  const groupMembers = state.group ? new Set(groupOf(state.group).members) : null;
   for (const e of ELEMENTS) {
     const t = tiles[e.number], z = e.number;
     let dim = false;
     if (m === "explore") {
-      if (state.cat && e.category !== state.cat) dim = true;
+      if (groupMembers && !groupMembers.has(z)) dim = true;
       if (q && !(e.name.toLowerCase().includes(q) || e.symbol.toLowerCase() === q || String(z) === q)) dim = true;
     }
     t.classList.toggle("dim", dim);
@@ -526,13 +578,20 @@ function badgeColor(v) {
 /* ---------- bay ---------- */
 function renderBay(hoverZ) {
   const m = state.mode;
-  if (m === "explore") {
+  if (m === "explore" && hoverZ == null && state.focus === "group" && state.group) {
+    const g = groupOf(state.group), fl = firstAndLatest(g.members);
+    bay.innerHTML = `<div class="gcard ${g.cls}">
+      <p class="eyebrow"><i class="swatch"></i>${g.kindLabel} · ${g.members.length} ${g.members.length === 1 ? "element" : "elements"}</p>
+      <h2>${esc(g.name)}</h2>
+      <p class="gsum">${esc(g.summary)}</p>
+      <div class="firsts"><span class="lab">First</span>${whenHTML(fl.first)}<span class="lab">Latest</span>${whenHTML(fl.latest)}</div></div>`;
+  } else if (m === "explore") {
     const e = el(hoverZ ?? state.sel);
     bay.innerHTML = `<div class="card">
       <div class="bigtile cat-${CAT_CLASS[e.category]}"><span class="z">${e.number}</span><span class="sym">${esc(e.symbol)}</span><span class="m">${e.atomic_mass || "—"}</span></div>
       <div><h2>${esc(e.name)}</h2>
         <div class="catline"><span class="chip cat-${CAT_CLASS[e.category]}">${esc(CAT_LABEL[e.category])}</span>
-        <span>Period ${e.period} · Group ${e.group}</span><span>${esc(e.phase)}</span></div></div>
+        <span>Period ${e.period} · Group ${e.group}</span><span>${esc(e.phase)}</span><span>Discovered: ${esc(e.year_label)}</span></div></div>
       <p class="fact">${esc(e.fun_fact)}</p></div>`;
   } else if (m === "play") {
     const g = state.game, rem = consistent(g.guesses);
@@ -563,7 +622,7 @@ const toolbar = document.getElementById("toolbar");
 function renderToolbar() {
   const m = state.mode;
   if (m === "explore") {
-    toolbar.innerHTML = `<div class="lead">The periodic table<small>Hover to read, click to pin. Filter by category below.</small></div>
+    toolbar.innerHTML = `<div class="lead">The periodic table<small>Hover to read, click to pin. Click a category or collection under the table for its story.</small></div>
       <input type="search" id="q" placeholder="Find: name, symbol or number" value="${esc(state.query)}" aria-label="Find an element">`;
   } else if (m === "play") {
     const g = state.game;
@@ -627,26 +686,50 @@ function hint() {
 const legend = document.getElementById("legend");
 function renderLegend() {
   const counts = {}; for (const e of ELEMENTS) counts[e.category] = (counts[e.category] || 0) + 1;
-  legend.innerHTML = CATS.map(([k, c, l]) => `<button class="cat-${c}" data-cat="${k}" aria-pressed="${state.cat === k}"><i></i>${l}<span>${counts[k]}</span></button>`).join("");
+  const on = (kind, id) => state.group && state.group.kind === kind && state.group.id === id;
+  legend.innerHTML = `<div class="legend-row"><span class="legend-label">Categories</span>
+      ${CATS.map(([k, c, l]) => `<button class="cat-${c}" data-cat="${k}" aria-pressed="${on("cat", k)}"><i></i>${l}<span>${counts[k]}</span></button>`).join("")}</div>
+    <div class="legend-row collections"><span class="legend-label">Collections</span>
+      ${GROUPS.collections.map(c => `<button data-col="${c.id}" aria-pressed="${on("col", c.id)}">${esc(c.name)}<span>${c.members.length}</span></button>`).join("")}</div>`;
 }
 legend.addEventListener("click", ev => {
   const b = ev.target.closest("button"); if (!b) return;
-  state.cat = state.cat === b.dataset.cat ? null : b.dataset.cat;
+  const g = b.dataset.cat ? { kind: "cat", id: b.dataset.cat } : { kind: "col", id: b.dataset.col };
+  const same = state.group && state.group.kind === g.kind && state.group.id === g.id;
+  state.group = same ? null : g;
+  state.focus = same ? "element" : "group";
   if (state.mode !== "explore") setMode("explore");
   render();
+  if (!same) document.getElementById("ptable").scrollIntoView({ behavior: "smooth", block: "nearest" });
 });
 
 /* ---------- below the table ---------- */
 const below = document.getElementById("below");
 function renderBelow() {
   const m = state.mode;
-  if (m === "explore") {
+  if (m === "explore" && state.focus === "group" && state.group) {
+    const g = groupOf(state.group);
+    const byYear = new Map();
+    for (const z of [...g.members].sort((a, b) => yearKey(a) - yearKey(b) || a - b)) {
+      const k = el(z).year_label; if (!byYear.has(k)) byYear.set(k, []); byYear.get(k).push(z);
+    }
+    const timeline = [...byYear.entries()].map(([y, zs]) => `<div class="tl-row"><span class="tl-year">${esc(y)}</span><div class="members">${zs.map(z => miniHTML(z, true)).join("")}</div></div>`).join("");
+    const sections = g.sections.length
+      ? g.sections.map(([h, t]) => `<p class="eyebrow">${esc(h)}</p><p>${esc(t)}</p>`).join("")
+      : `<p class="eyebrow">About</p><p>${esc(g.summary)}</p>`;
+    below.innerHTML = `<div class="below">
+      <div class="panel"><h3>${esc(g.name)}</h3><div class="prose gprose">${sections}</div></div>
+      <div class="panel"><p class="eyebrow">Discovery timeline</p><h3>In order of discovery</h3>
+        <div class="timeline">${timeline}</div>
+        <p class="muted" style="font-size:var(--step--1);margin:12px 0 0">Years are the commonly cited dates of discovery or first isolation; several were disputed or happened in stages.</p></div></div>`;
+  } else if (m === "explore") {
     const e = el(state.sel);
     const k = (v, u = "") => v === "" || v == null ? "—" : `${v}${u}`;
     const toC = v => v === "" || v == null ? "—" : `${Number(v).toLocaleString("en-US", { maximumFractionDigits: 1 })} K (${(v - 273.15).toLocaleString("en-US", { maximumFractionDigits: 0 })} °C)`;
     below.innerHTML = `<div class="below">
       <div class="panel"><p class="eyebrow">${e.number} · ${esc(e.symbol)}</p><h3>${esc(e.name)}</h3>
-        <div class="prose"><p>${esc(e.summary)}</p></div></div>
+        <div class="prose"><p>${esc(e.summary)}</p></div>
+        ${collectionsOf(e.number).length ? `<p class="eyebrow" style="margin-top:16px">Also in</p><div class="inchips">${collectionsOf(e.number).map(c => `<button class="inchip" data-col="${c.id}">${esc(c.name)}</button>`).join("")}</div>` : ""}</div>
       <div class="panel"><p class="eyebrow">Properties</p>
         <dl class="stats">
           <div><dt>Atomic mass</dt><dd>${k(e.atomic_mass, " u")}</dd></div>
@@ -656,6 +739,7 @@ function renderBelow() {
           <div><dt>Melts</dt><dd>${toC(e.melt_k)}</dd></div>
           <div><dt>Boils</dt><dd>${toC(e.boil_k)}</dd></div>
           <div><dt>Electron configuration</dt><dd>${esc(e.electron_config)}</dd></div>
+          <div><dt>Discovered</dt><dd>${esc(e.year_label)}</dd></div>
           <div><dt>Discovered by</dt><dd style="font-family:var(--font-body)">${esc(e.discovered_by || "Known since antiquity")}</dd></div>
         </dl></div></div>`;
   } else if (m === "play") {
@@ -713,6 +797,12 @@ function renderStrategyPanels() {
         <div class="hist">${hist}</div></div></div>`;
 }
 below.addEventListener("click", ev => {
+  if (state.mode === "explore") {
+    const mini = ev.target.closest("button.mini"), chip = ev.target.closest(".inchip");
+    if (mini) { state.sel = Number(mini.dataset.z); state.focus = "element"; render(); }
+    else if (chip) { state.group = { kind: "col", id: chip.dataset.col }; state.focus = "group"; render(); }
+    return;
+  }
   if (state.mode !== "strategy") return;
   const s = state.strat;
   const mini = ev.target.closest("button.mini");
@@ -808,6 +898,8 @@ function render() {
 function start(saved) {
   if (saved && saved.state) Object.assign(state, saved.state);
   if (!Array.isArray(state.strat.path)) { state.strat.path = []; state.strat.secret = null; }
+  if (!state.focus) state.focus = "element";
+  delete state.cat;
   const h = (location.hash || "").slice(1);
   if (!saved?.state && ["explore", "play", "strategy"].includes(h)) state.mode = h;
   setMode(state.mode);

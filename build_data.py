@@ -175,8 +175,35 @@ FUN_FACTS = {
 }
 
 
+# Commonly cited discovery (or first-isolation) years. None = antiquity.
+# Several are disputed or happened in stages; these are the usual dates.
+YEARS = {
+    1: 1766, 2: 1868, 3: 1817, 4: 1798, 5: 1808, 6: None, 7: 1772, 8: 1771, 9: 1886, 10: 1898,
+    11: 1807, 12: 1755, 13: 1825, 14: 1824, 15: 1669, 16: None, 17: 1774, 18: 1894, 19: 1807, 20: 1808,
+    21: 1879, 22: 1791, 23: 1801, 24: 1797, 25: 1774, 26: None, 27: 1735, 28: 1751, 29: None, 30: 1746,
+    31: 1875, 32: 1886, 33: 1250, 34: 1817, 35: 1826, 36: 1898, 37: 1861, 38: 1790, 39: 1794, 40: 1789,
+    41: 1801, 42: 1778, 43: 1937, 44: 1844, 45: 1804, 46: 1802, 47: None, 48: 1817, 49: 1863, 50: None,
+    51: None, 52: 1782, 53: 1811, 54: 1898, 55: 1860, 56: 1772, 57: 1839, 58: 1803, 59: 1885, 60: 1885,
+    61: 1945, 62: 1879, 63: 1901, 64: 1880, 65: 1843, 66: 1886, 67: 1878, 68: 1843, 69: 1879, 70: 1878,
+    71: 1907, 72: 1923, 73: 1802, 74: 1783, 75: 1925, 76: 1803, 77: 1803, 78: 1748, 79: None, 80: None,
+    81: 1861, 82: None, 83: 1500, 84: 1898, 85: 1940, 86: 1899, 87: 1939, 88: 1898, 89: 1899, 90: 1829,
+    91: 1913, 92: 1789, 93: 1940, 94: 1940, 95: 1944, 96: 1944, 97: 1949, 98: 1950, 99: 1952, 100: 1952,
+    101: 1955, 102: 1966, 103: 1961, 104: 1964, 105: 1968, 106: 1974, 107: 1981, 108: 1984, 109: 1982, 110: 1994,
+    111: 1994, 112: 1996, 113: 2004, 114: 1999, 115: 2003, 116: 2000, 117: 2010, 118: 2002,
+}
+APPROXIMATE = {33, 83}  # arsenic c. 1250, bismuth c. 1500
+
+
+def year_label(z: int) -> str:
+    y = YEARS[z]
+    if y is None:
+        return "Antiquity"
+    return f"c. {y}" if z in APPROXIMATE else str(y)
+
+
 def main() -> None:
     src = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    assert sorted(YEARS) == list(range(1, 119))
     rows = []
     for e in src["elements"]:
         z = e["number"]
@@ -200,6 +227,8 @@ def main() -> None:
                 "electronegativity": e["electronegativity_pauling"] or "",
                 "electron_config": e["electron_configuration_semantic"],
                 "discovered_by": e["discovered_by"] or "",
+                "year": YEARS[z] if YEARS[z] is not None else "",
+                "year_label": year_label(z),
                 "fun_fact": FUN_FACTS[z],
                 "summary": e["summary"],
             }

@@ -4,7 +4,7 @@ An element-guessing game in the style of Wordle, with an explorer for the period
 
 Open `elementle.html` in a browser. It is self-contained, with all data baked in, and has three modes:
 
-- **Explore**: the periodic table with categories, properties and a fun fact for each element.
+- **Explore**: the periodic table with properties, discovery year and a fun fact for each element. Click a category for its history, first and latest additions, where its edges are and how to remember it. Click one of the 18 collections, such as one-letter symbols, elements named after places or Seaborg's ten, to highlight it.
 - **Play**: guess a random or chosen secret. Elements that are ruled out turn grey. The Hint button gives the optimal move while you stay on the optimal path.
 - **Strategy**: replay any strategy against any secret, see how many guesses each element needs, and read the findings.
 
@@ -34,7 +34,8 @@ python build_html.py                           # -> elementle.html
 
 | File | What it does |
 |---|---|
-| `build_data.py` | Pulls element stats from Periodic-Table-JSON (CC BY-SA, from Wikipedia), assigns categories and adds the fun facts. |
+| `build_data.py` | Pulls element stats from Periodic-Table-JSON (CC BY-SA, from Wikipedia), assigns categories and adds discovery years and fun facts. |
+| `groups.py` | Holds the category notes and the collections. |
 | `solver.py` | Defines the game rules and the simple strategies. It runs the C++ search and writes `strategies.json`. |
 | `search.cpp` | Runs the exact search over decision trees, memoizing candidate sets and pruning with branch-and-bound. |
-| `template.html`, `findings.html` | The page and the findings text; `build_html.py` fills them in. |
+| `template.html`, `findings.html` | The page and the findings text; `build_html.py` fills them in with the data, the strategies and `groups.py`. |
