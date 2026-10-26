@@ -198,7 +198,7 @@ input[type="search"] {
 .rows { display: flex; flex-direction: column; gap: 6px; }
 .row { display: grid; grid-template-columns: 28px auto auto auto minmax(0, 1fr); align-items: center; gap: 6px; }
 .row .n { font: 600 var(--step--1)/1 var(--font-data); color: var(--faint); text-align: right; }
-.row .letters { display: flex; gap: 3px; }
+.letters { display: flex; gap: 3px; }
 .fb {
   min-width: 38px; height: 38px; display: grid; place-items: center; border-radius: 2px; padding: 0 8px;
   font: 700 var(--step-1)/1 var(--font-display); background: var(--miss); color: var(--fg);
@@ -260,6 +260,16 @@ input[type="search"] {
 button.mini:hover { border-color: var(--c); }
 .count { font: 600 11px/1 var(--font-data); color: var(--muted); margin-left: 6px; align-self: center; }
 
+.treehead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.trail { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--line); }
+.trail .row { cursor: pointer; }
+.trail .row:hover .who b { text-decoration: underline; }
+button.group { width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; padding: 8px 6px; border-radius: 2px; }
+button.group:hover { background: var(--panel-2); }
+button.group:last-child { border-bottom: 0; }
+.group .more { margin-left: auto; align-self: center; font: 600 11px/1 var(--font-body); color: var(--accent); letter-spacing: .03em; white-space: nowrap; padding-left: 8px; }
+.findings { max-width: none; }
+.findings > * { max-width: 72ch; }
 .steps { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 12px 0 0; }
 
 .research { margin-top: 28px; }
@@ -366,6 +376,20 @@ function playOut(key, secret) {
   }
   return steps;
 }
+/* A position in a strategy's tree: the answers received so far (path) decide
+   the guesses made, the candidates left (pool) and the strategy's next guess. */
+function nodeAt(key, path) {
+  let node = STRATS[key].tree;
+  const guesses = [];
+  for (const fb of path) { guesses.push({ z: node.g, fb }); node = node.k[fb]; }
+  return { node, guesses, pool: consistent(guesses) };
+}
+function pathTo(key, secret) { return playOut(key, secret).slice(0, -1).map(x => x.fb); }
+function stratView() {
+  const s = state.strat, v = nodeAt(s.key, s.path);
+  v.found = s.secret != null && v.node.g === s.secret;
+  return v;
+}
 
 /* ---------- render helpers ---------- */
 function fbHTML(z, fb, compact = false) {
@@ -394,7 +418,7 @@ const state = {
   cat: null,
   query: "",
   game: { secret: null, guesses: [], picking: false, revealed: false },
-  strat: { key: "optimal", secret: null, step: null, overlay: "depth" },
+  strat: { key: "optimal", path: [], secret: null, overlay: "depth" },
 };
 function newGame(secret = null) {
   state.game = { secret: secret ?? ALL[Math.floor(Math.random() * N)], guesses: [], picking: false, revealed: false };
@@ -441,10 +465,11 @@ function onTile(z) {
     if (g.picking) { newGame(z); }
     else if (!isWon() && !g.revealed && !g.guesses.some(x => x.z === z)) g.guesses.push({ z, fb: FB[z][g.secret] });
   } else {
-    state.strat.secret = z; state.strat.step = null;
+    showHunt(z);
   }
   render();
 }
+function showHunt(z) { state.strat.secret = z; state.strat.path = pathTo(state.strat.key, z); }
 function isWon() { const g = state.game; return g.guesses.some(x => x.z === g.secret); }
 
 function paintTiles() {
@@ -460,13 +485,11 @@ function paintTiles() {
     const s = state.strat;
     if (s.overlay === "depth") { const d = depthMap(s.key); badge = z => d[z]; }
     else { const o = Object.fromEntries(DATA.openers.map(x => [x.z, x])); badge = z => o[z].avg_free.toFixed(2); }
-    if (s.secret) {
-      const steps = playOut(s.key, s.secret), k = stepIndex(steps);
-      remaining = new Set(steps[k].before);
-      steps.slice(0, k).forEach(x => guessed.add(x.z));
-      current = steps[k].z; secret = s.secret;
-      if (k === steps.length - 1) won = s.secret;
-    }
+    const v = stratView();
+    v.guesses.forEach(x => guessed.add(x.z));
+    secret = s.secret;
+    if (v.found) { remaining = new Set([s.secret]); won = s.secret; }
+    else { remaining = new Set(v.pool); current = v.node.g; }
   }
   const q = state.query.trim().toLowerCase();
   for (const e of ELEMENTS) {
@@ -523,21 +546,17 @@ function renderBay(hoverZ) {
     bay.innerHTML = `<p class="status">${status}</p><p class="sub">${sub}</p>
       <div class="rows">${last.map((x, i) => rowHTML(g.guesses.length - last.length + i, x.z, x.fb)).join("")}</div>`;
   } else {
-    const s = state.strat, st = STRATS[s.key];
-    if (!s.secret) {
-      bay.innerHTML = `<p class="status">${esc(st.label)}: worst <em>${st.worst}</em>, average <em>${st.average.toFixed(2)}</em></p>
-        <p class="sub">The number on each tile is how many guesses this strategy needs to find that element. Click any element to watch the strategy hunt for it.</p>`;
-      return;
+    const s = state.strat, st = STRATS[s.key], v = stratView(), n = s.path.length + 1, g = el(v.node.g);
+    if (v.found) {
+      bay.innerHTML = `<p class="status">Guess ${n}: <em>${esc(g.name)}</em> — found it</p>
+        <p class="sub">${esc(st.label)} needs ${n} ${n === 1 ? "guess" : "guesses"} for ${esc(g.name)}. Step back with the trail below to see the other branches.</p>`;
+    } else {
+      const groups = partition(v.pool, v.node.g).length;
+      bay.innerHTML = `<p class="status">${n === 1 ? `${esc(st.label)} opens with` : `Guess ${n}:`} <em>${esc(g.name)}</em></p>
+        <p class="sub">${v.pool.length} ${v.pool.length === 1 ? "element is" : "elements are"} possible here (lit on the table). Its answers split them into ${groups} ${groups === 1 ? "group" : "groups"}. Follow one in the strategy tree below, or click any element to jump to the end of its path. Tile numbers: guesses this strategy needs for that element.</p>`;
     }
-    const steps = playOut(s.key, s.secret), k = stepIndex(steps), cur = steps[k];
-    const done = k === steps.length - 1;
-    bay.innerHTML = `<p class="status">Guess ${k + 1}: <em>${esc(el(cur.z).name)}</em>${done ? " — found it" : ""}</p>
-      <p class="sub">${done ? `${esc(st.label)} needs ${steps.length} ${steps.length === 1 ? "guess" : "guesses"} for ${esc(el(s.secret).name)}.`
-        : `${cur.before.length} candidates before this guess, ${cur.after.length} after it.`}</p>
-      <div class="rows">${rowHTML(k, cur.z, cur.fb)}</div>`;
   }
 }
-function stepIndex(steps) { const s = state.strat.step; return s == null ? steps.length - 1 : Math.min(s, steps.length - 1); }
 
 /* ---------- toolbar ---------- */
 const toolbar = document.getElementById("toolbar");
@@ -556,7 +575,7 @@ function renderToolbar() {
       <button class="btn" data-act="reveal" ${isWon() || g.revealed ? "disabled" : ""}>Reveal</button>`;
   } else {
     const s = state.strat;
-    toolbar.innerHTML = `<div class="lead">Strategy<small>Pick a strategy, then click an element to replay the hunt for it.</small></div>
+    toolbar.innerHTML = `<div class="lead">Strategy<small>Walk a strategy's decision tree, or click an element to see how it gets found.</small></div>
       <div class="seg" role="group" aria-label="Strategy">${STRAT_KEYS.map(k => `<button data-strat="${k}" aria-pressed="${s.key === k}">${esc(STRATS[k].label)}</button>`).join("")}</div>
       <div class="seg" role="group" aria-label="Tile numbers"><button data-overlay="depth" aria-pressed="${s.overlay === "depth"}">Guesses to find</button><button data-overlay="opener" aria-pressed="${s.overlay === "opener"}">Average as opener</button></div>`;
   }
@@ -570,13 +589,18 @@ toolbar.addEventListener("click", ev => {
   if (b.dataset.act === "reveal") g.revealed = true;
   if (b.dataset.act === "hint") { state.hint = hint(); }
   else state.hint = null;
-  if (b.dataset.strat) { state.strat.key = b.dataset.strat; state.strat.step = null; }
+  if (b.dataset.strat) setStrategy(b.dataset.strat);
   if (b.dataset.overlay) state.strat.overlay = b.dataset.overlay;
   render();
 });
 toolbar.addEventListener("input", ev => {
   if (ev.target.id === "q") { state.query = ev.target.value; paintTiles(); }
 });
+
+function setStrategy(key) {
+  state.strat.key = key;
+  state.strat.path = state.strat.secret ? pathTo(key, state.strat.secret) : [];
+}
 
 /* Hint: follow the best-worst-case tree while the player is on it; otherwise
    pick the guess whose biggest leftover group is smallest. */
@@ -651,39 +675,59 @@ function renderBelow() {
 }
 
 function renderStrategyPanels() {
-  const s = state.strat, st = STRATS[s.key];
-  const d = depthMap(s.key);
-  const worstList = ALL.filter(z => d[z] === st.worst);
-  const max = Math.max(...Object.values(st.histogram));
-  const hist = Object.entries(st.histogram).map(([k, v]) =>
-    `<span class="lab">${k} ${k === "1" ? "guess" : "guesses"}</span><span class="bar"><i style="width:${(v / max) * 100}%"></i></span><span class="val">${v}</span>`).join("");
-  let replay;
-  if (s.secret) {
-    const steps = playOut(s.key, s.secret), k = stepIndex(steps);
-    replay = `<h3>Hunting for ${esc(el(s.secret).name)}</h3>
-      <div class="rows">${steps.map((x, i) => rowHTML(i, x.z, x.fb, ` · ${x.after.length && x.z !== s.secret ? `${x.after.length} left` : "found"}`, `click ${i === k ? "active" : ""} ${i > k ? "future" : ""}`)).join("")}</div>
-      <div class="steps"><button class="btn" data-step="prev" ${k === 0 ? "disabled" : ""}>Previous guess</button><button class="btn" data-step="next" ${k === steps.length - 1 ? "disabled" : ""}>Next guess</button>
-      <span class="muted" style="font-size:var(--step--1)">The table shows what is still possible before the highlighted guess.</span></div>`;
+  const s = state.strat, st = STRATS[s.key], d = depthMap(s.key), v = stratView();
+  const n = s.path.length + 1, g = v.node.g;
+  const trail = v.guesses.map((x, i) => rowHTML(i, x.z, x.fb, "", `click ${i === v.guesses.length - 1 ? "active" : ""}`)).join("");
+  let body;
+  if (v.found) {
+    body = `<div class="rows">${rowHTML(n - 1, g, FB[g][g], " · found", "active")}</div>`;
   } else {
-    replay = `<h3>Pick a secret</h3><p class="muted">Click any element on the table, or one of the hardest cases for this strategy:</p>`;
+    const parts = partition(v.pool, g);
+    const items = [];
+    if (v.pool.includes(g)) items.push(`<div class="group"><div class="key">${fbHTML(g, FB[g][g], true)}<span class="count">1</span></div>
+      <div class="members">${miniHTML(g, true)}<span class="count">found on this guess</span></div></div>`);
+    for (const [key, members] of parts) {
+      const more = Math.max(...members.map(z => d[z])) - n;
+      items.push(`<button class="group branch" data-key="${esc(key)}"><div class="key">${fbHTML(g, key, true)}<span class="count">${members.length}</span></div>
+        <div class="members">${members.map(z => miniHTML(z)).join("")}<span class="more">${more === 1 ? "1 more guess" : `up to ${more} more`} ›</span></div></button>`);
+    }
+    body = `<h3>Guess ${n}: ${esc(el(g).name)} (${esc(el(g).symbol)}). Which answer did you get?</h3>
+      <div class="groups">${items.join("")}</div>`;
   }
-  return `<div class="below">
-    <div class="panel">${replay}
-      <p class="eyebrow" style="margin-top:18px">Hardest for this strategy · ${st.worst} guesses</p>
-      <div class="members" style="display:flex;flex-wrap:wrap;gap:3px">${worstList.map(z => miniHTML(z, true)).join("")}</div></div>
-    <div class="panel"><p class="eyebrow">${esc(st.label)} · opens with ${esc(el(st.tree.g).name)}</p>
-      <h3>Average ${st.average.toFixed(3)} guesses, never more than ${st.worst}</h3>
-      <div class="hist">${hist}</div></div></div>`;
+  const max = Math.max(...Object.values(st.histogram));
+  const hist = Object.entries(st.histogram).map(([k, val]) =>
+    `<span class="lab">${k} ${k === "1" ? "guess" : "guesses"}</span><span class="bar"><i style="width:${(val / max) * 100}%"></i></span><span class="val">${val}</span>`).join("");
+  const worstList = ALL.filter(z => d[z] === st.worst);
+  return `<div class="panel" style="margin-top:22px">
+      <div class="treehead"><div><p class="eyebrow">${esc(st.label)} · strategy tree</p>
+        <p class="muted" style="margin:0;font-size:var(--step--1)">Each group is one possible answer; open it to see the next guess.</p></div>
+        <div class="steps" style="margin:0"><button class="btn" data-nav="start" ${s.path.length || v.found ? "" : "disabled"}>Back to start</button>
+        <button class="btn" data-nav="up" ${s.path.length ? "" : "disabled"}>Up one guess</button></div></div>
+      ${trail ? `<div class="rows trail">${trail}</div>` : ""}
+      ${body}</div>
+    <div class="below">
+      <div class="panel"><p class="eyebrow">Hardest for this strategy · ${st.worst} guesses</p>
+        <div class="members" style="display:flex;flex-wrap:wrap;gap:3px">${worstList.map(z => miniHTML(z, true)).join("")}</div></div>
+      <div class="panel"><p class="eyebrow">${esc(st.label)} · opens with ${esc(el(st.tree.g).name)}</p>
+        <h3>Average ${st.average.toFixed(3)} guesses, never more than ${st.worst}</h3>
+        <div class="hist">${hist}</div></div></div>`;
 }
 below.addEventListener("click", ev => {
+  if (state.mode !== "strategy") return;
+  const s = state.strat;
   const mini = ev.target.closest("button.mini");
-  if (mini && state.mode === "strategy") { state.strat.secret = Number(mini.dataset.z); state.strat.step = null; render(); return; }
-  const stepBtn = ev.target.closest("[data-step]");
-  if (stepBtn && state.mode === "strategy" && state.strat.secret) {
-    const steps = playOut(state.strat.key, state.strat.secret), k = stepIndex(steps), v = stepBtn.dataset.step;
-    state.strat.step = v === "prev" ? Math.max(0, k - 1) : v === "next" ? Math.min(steps.length - 1, k + 1) : Number(v);
-    render();
-  }
+  const branch = ev.target.closest("button.branch");
+  const row = ev.target.closest(".trail .row");
+  const nav = ev.target.closest("[data-nav]");
+  if (mini) showHunt(Number(mini.dataset.z));
+  else if (branch) {
+    s.path = [...s.path, branch.dataset.key];
+    if (s.secret != null && !stratView().pool.includes(s.secret)) s.secret = null;
+  } else if (row) s.path = s.path.slice(0, Number(row.dataset.step) + 1);
+  else if (nav?.dataset.nav === "start") { s.path = []; s.secret = null; }
+  else if (nav?.dataset.nav === "up") s.path = s.path.slice(0, -1);
+  else return;
+  render();
 });
 
 /* ---------- research ---------- */
@@ -703,28 +747,15 @@ function renderResearch() {
   const bestW = byWorst[0], bestA = byAvg[0];
   const nWorstOpt = O.filter(o => o.worst === DATA.optimal_worst).length;
 
-  // first-guess breakdown for the selected strategy's opener
-  const open = S[state.strat.key].tree.g;
-  const parts = partition(ALL, open);
-  const groups = parts.map(([key, members]) => `<div class="group"><div class="key">${fbHTML(open, key, true)}<span class="count">${members.length}</span></div>
-      <div class="members">${members.map(z => miniHTML(z, true)).join("")}</div></div>`).join("");
-
   research.innerHTML = `<div class="wrap-in">
     <h2>What the search found</h2>
     <p class="lede">Every strategy here was computed exactly by searching all decision trees over the 118 elements. Any element may be guessed, even one already ruled out.</p>
     <div class="panel scroll-x"><table class="compare">
       <thead><tr><th>Strategy</th><th>Opens with</th><th class="num">Worst</th><th class="num">Average</th>${[1, 2, 3, 4, 5, 6, 7].map(i => `<th class="num">in ${i}</th>`).join("")}</tr></thead>
       <tbody>${rows}</tbody></table></div>
-    <div class="grid2">
-      <div class="panel prose">
-        <p class="eyebrow">Findings</p>
-        <!--__FINDINGS__-->
-      </div>
-      <div class="panel">
-        <p class="eyebrow">First guess: ${esc(el(open).name)} splits the 118 into ${parts.length + 1} groups</p>
-        <h3>What each answer to ${esc(el(open).symbol)} leaves</h3>
-        <div class="groups">${groups}</div>
-      </div>
+    <div class="panel prose findings" style="margin-top:20px">
+      <p class="eyebrow">Findings</p>
+      <!--__FINDINGS__-->
     </div>
     <div class="panel" style="margin-top:20px">
       <p class="eyebrow">Every opener, ranked by average with the best follow-up</p>
@@ -756,9 +787,7 @@ function openerChart(list) {
 }
 research.addEventListener("click", ev => {
   const tr = ev.target.closest("tr[data-strat]");
-  if (tr) { state.strat.key = tr.dataset.strat; state.strat.step = null; render(); return; }
-  const mini = ev.target.closest("button.mini");
-  if (mini) { state.strat.secret = Number(mini.dataset.z); state.strat.step = null; render(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+  if (tr) { setStrategy(tr.dataset.strat); render(); }
 });
 
 /* ---------- mode & render ---------- */
@@ -778,6 +807,7 @@ function render() {
 }
 function start(saved) {
   if (saved && saved.state) Object.assign(state, saved.state);
+  if (!Array.isArray(state.strat.path)) { state.strat.path = []; state.strat.secret = null; }
   const h = (location.hash || "").slice(1);
   if (!saved?.state && ["explore", "play", "strategy"].includes(h)) state.mode = h;
   setMode(state.mode);
