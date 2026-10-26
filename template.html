@@ -585,6 +585,9 @@ function renderBay(hoverZ) {
       <h2>${esc(g.name)}</h2>
       <p class="gsum">${esc(g.summary)}</p>
       <div class="firsts"><span class="lab">First</span>${whenHTML(fl.first)}<span class="lab">Latest</span>${whenHTML(fl.latest)}</div></div>`;
+  } else if (m === "explore" && (hoverZ ?? state.sel) == null) {
+    bay.innerHTML = `<p class="status">Pick an element</p>
+      <p class="sub">Hover over any tile to read about it, or click to pin it. Click a category or collection under the table for its story.</p>`;
   } else if (m === "explore") {
     const e = el(hoverZ ?? state.sel);
     bay.innerHTML = `<div class="card">
@@ -722,6 +725,8 @@ function renderBelow() {
       <div class="panel"><p class="eyebrow">Discovery timeline</p><h3>In order of discovery</h3>
         <div class="timeline">${timeline}</div>
         <p class="muted" style="font-size:var(--step--1);margin:12px 0 0">Years are the commonly cited dates of discovery or first isolation; several were disputed or happened in stages.</p></div></div>`;
+  } else if (m === "explore" && state.sel == null) {
+    below.innerHTML = "";
   } else if (m === "explore") {
     const e = el(state.sel);
     const k = (v, u = "") => v === "" || v == null ? "—" : `${v}${u}`;
@@ -878,6 +883,16 @@ function openerChart(list) {
 research.addEventListener("click", ev => {
   const tr = ev.target.closest("tr[data-strat]");
   if (tr) { setStrategy(tr.dataset.strat); render(); }
+});
+
+/* Clicking blank space in Explore clears the pinned element and any
+   highlighted group; clicks on tiles, text, panels and controls don't count. */
+const BLANK = "html, body, main, .wrap, .toolbar, .table-scroll, .ptable, .gaprow, .slot, .legend, .legend-row, #below, .below";
+document.addEventListener("click", ev => {
+  if (state.mode !== "explore" || !ev.target.matches(BLANK)) return;
+  if (state.sel == null && !state.group) return;
+  state.sel = null; state.group = null; state.focus = "element";
+  render();
 });
 
 /* ---------- mode & render ---------- */
