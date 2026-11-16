@@ -3,7 +3,7 @@
 Usage:
     curl -sS -o PeriodicTableJSON.json \
         https://raw.githubusercontent.com/Bowserinator/Periodic-Table-JSON/master/PeriodicTableJSON.json
-    python build_data.py PeriodicTableJSON.json
+    python src/build_data.py PeriodicTableJSON.json
 
 Stats come from the dataset (CC BY-SA, derived from Wikipedia). Categories use
 the standard 10-category scheme below, not the dataset's own labels, and the
@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).parent
+ROOT = HERE.parent
 
 CATEGORIES = [
     "alkali metal",
@@ -233,7 +234,7 @@ def main() -> None:
                 "summary": e["summary"],
             }
         )
-    out = HERE / "elements.csv"
+    out = ROOT / "data" / "elements.csv"
     with out.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
         w.writeheader()

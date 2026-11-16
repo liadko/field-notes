@@ -2,11 +2,11 @@
 
 An element-guessing game in the style of Wordle, with an explorer for the periodic table and an exact solver for the best strategy.
 
-Open `elementle.html` in a browser. It is self-contained, with all data baked in, and has three modes:
+Open `dist/elementle.html` in a browser. It is self-contained, with all data baked in, and has three modes:
 
 - **Explore**: the periodic table with properties, discovery year and a fun fact for each element. Click a category for its history, first and latest additions, where its edges are and how to remember it. Click one of the 18 collections, such as one-letter symbols, elements named after places or Seaborg's ten, to highlight it.
 - **Play**: guess a random or chosen secret. Elements that are ruled out turn grey. The Hint button gives the optimal move while you stay on the optimal path.
-- **Strategy**: replay any strategy against any secret, see how many guesses each element needs, and read the findings.
+- **Strategy**: walk each strategy's decision tree answer by answer, click any element to see how it gets found, and read the findings.
 
 ## Rules modelled
 
@@ -27,15 +27,14 @@ Open `elementle.html` in a browser. It is self-contained, with all data baked in
 ```sh
 curl -sS -o PeriodicTableJSON.json \
   https://raw.githubusercontent.com/Bowserinator/Periodic-Table-JSON/master/PeriodicTableJSON.json
-python build_data.py PeriodicTableJSON.json   # -> elements.csv
-python solver.py                               # -> strategies.json (needs g++; about 3 minutes)
-python build_html.py                           # -> elementle.html
+python src/build_data.py PeriodicTableJSON.json   # -> data/elements.csv
+python src/solver.py                               # -> data/strategies.json (needs g++; about 3 minutes)
+python src/build_html.py                           # -> dist/elementle.html
 ```
 
-| File | What it does |
+| Folder | Contents |
 |---|---|
-| `build_data.py` | Pulls element stats from Periodic-Table-JSON (CC BY-SA, from Wikipedia), assigns categories and adds discovery years and fun facts. |
-| `groups.py` | Holds the category notes and the collections. |
-| `solver.py` | Defines the game rules and the simple strategies. It runs the C++ search and writes `strategies.json`. |
-| `search.cpp` | Runs the exact search over decision trees, memoizing candidate sets and pruning with branch-and-bound. |
-| `template.html`, `findings.html` | The page and the findings text; `build_html.py` fills them in with the data, the strategies and `groups.py`. |
+| `src/` | The code. `build_data.py` pulls element stats from Periodic-Table-JSON (CC BY-SA, from Wikipedia) and adds categories, discovery years and fun facts. `groups.py` holds the category notes and collections. `solver.py` defines the rules and simple strategies and runs the exact search in `search.cpp`. `build_html.py` assembles the page. |
+| `data/` | Generated data: `elements.csv` and `strategies.json`. |
+| `web/` | Page sources: `template.html` and the findings text in `findings.html`. |
+| `dist/` | The built, self-contained page, `elementle.html`. |

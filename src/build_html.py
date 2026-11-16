@@ -1,6 +1,6 @@
 """Bake elements.csv, strategies.json, groups.py and findings.html into elementle.html.
 
-Usage: python build_html.py
+Usage: python src/build_html.py
 """
 
 import csv
@@ -10,6 +10,7 @@ from pathlib import Path
 from groups import groups_json
 
 HERE = Path(__file__).parent
+ROOT = HERE.parent
 NUMERIC = {"number", "period", "group", "xpos", "ypos"}
 OPTIONAL_INT = {"year"}
 FLOATS = {"atomic_mass", "density", "melt_k", "boil_k", "electronegativity"}
@@ -17,7 +18,7 @@ FLOATS = {"atomic_mass", "density", "melt_k", "boil_k", "electronegativity"}
 
 def load_elements() -> list[dict]:
     rows = []
-    for r in csv.DictReader((HERE / "elements.csv").open(encoding="utf-8")):
+    for r in csv.DictReader((ROOT / "data" / "elements.csv").open(encoding="utf-8")):
         for k in NUMERIC:
             r[k] = int(r[k])
         for k in OPTIONAL_INT:
@@ -29,16 +30,16 @@ def load_elements() -> list[dict]:
 
 
 def main() -> None:
-    html = (HERE / "template.html").read_text(encoding="utf-8")
+    html = (ROOT / "web" / "template.html").read_text(encoding="utf-8")
     elements = json.dumps(load_elements(), ensure_ascii=False, separators=(",", ":"))
-    strategies = (HERE / "strategies.json").read_text(encoding="utf-8")
-    findings = (HERE / "findings.html").read_text(encoding="utf-8")
+    strategies = (ROOT / "data" / "strategies.json").read_text(encoding="utf-8")
+    findings = (ROOT / "web" / "findings.html").read_text(encoding="utf-8")
     # "</" must not appear inside the inline script.
     html = html.replace("/*__ELEMENTS__*/null", elements.replace("</", "<\\/"))
     html = html.replace("/*__STRATEGIES__*/null", strategies.replace("</", "<\\/"))
     html = html.replace("/*__GROUPS__*/null", groups_json().replace("</", "<\\/"))
     html = html.replace("<!--__FINDINGS__-->", findings)
-    out = HERE / "elementle.html"
+    out = ROOT / "dist" / "elementle.html"
     out.write_text(html, encoding="utf-8")
     print(f"wrote {out} ({len(html) // 1024} KB)")
 

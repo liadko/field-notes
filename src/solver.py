@@ -26,7 +26,7 @@ used, so every guess shown could be the answer.
 It also records, for every opener, its worst case and average under the best
 follow-up.
 
-Usage: python solver.py
+Usage: python src/solver.py
 """
 
 import csv
@@ -37,9 +37,10 @@ import time
 from pathlib import Path
 
 HERE = Path(__file__).parent
+ROOT = HERE.parent
 CAP = 6  # depth limit for the best-average search; cap 7 gives identical totals for every opener
 
-ELEMENTS = list(csv.DictReader((HERE / "elements.csv").open(encoding="utf-8")))
+ELEMENTS = list(csv.DictReader((ROOT / "data" / "elements.csv").open(encoding="utf-8")))
 N = len(ELEMENTS)
 SYM = [e["symbol"] for e in ELEMENTS]
 CAT = [e["category"] for e in ELEMENTS]
@@ -215,7 +216,7 @@ def main() -> None:
 
     out = {"optimal_worst": normal["W"], "hard_worst": hard["W"], "cap": CAP,
            "strategies": strategies, "openers": openers}
-    (HERE / "strategies.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
+    (ROOT / "data" / "strategies.json").write_text(json.dumps(out, separators=(",", ":")), encoding="utf-8")
     print(f"wrote strategies.json ({time.time() - t0:.0f}s)")
 
 
