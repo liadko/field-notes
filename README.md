@@ -1,6 +1,6 @@
 # Elementle
 
-An element-guessing game in the style of Wordle, with an explorer for the periodic table and an exact solver for the best strategy. This is unrelated to the timetabler; it just lives here.
+An element-guessing game in the style of Wordle, with an explorer for the periodic table and an exact solver for the best strategy.
 
 Open `elementle.html` in a browser. It is self-contained, with all data baked in, and has three modes:
 
