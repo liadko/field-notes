@@ -7,7 +7,7 @@ A periodic-table explorer and exact strategy study for the daily element-guessin
 - `src/build_data.py`: reads a Periodic-Table-JSON dump, which it does not download itself, and writes `data/elements.csv` with the categories, discovery years and fun facts, which are hand-written here.
 - `src/groups.py`: category stories (history, edges, how to remember) and the "collections". Members are atomic numbers.
 - `src/solver.py`: the game rules (`feedback()`), the simple strategies (binary, rule of thumb), summaries and `data/strategies.json`. It compiles and runs `src/search.cpp`, the exact branch-and-bound search, which takes about 3 minutes.
-- `web/template.html` and `web/findings.html`: the page and the findings text. `src/build_html.py` bakes in the CSV, `data/strategies.json` and `groups.py` to produce `dist/elementle.html`. Commit the built page too.
+- `web/templates/elementle.html.in` and `web/findings.html`: the page and the findings text. `src/build_html.py` bakes in the CSV, `data/strategies.json` and `groups.py` to produce `dist/elementle.html`. Commit the built page too.
 - Run every script from the repo root, for example `python src/build_html.py`.
 
 ## Rules as modelled
@@ -15,7 +15,7 @@ A periodic-table explorer and exact strategy study for the daily element-guessin
 - **Symbol:** Wordle-style per letter, case-insensitive. A secret letter past the guess's length still counts for yellow, so guessing C against Sc gives a yellow C.
 - **Atomic number:** an arrow toward the secret.
 - **Family:** the standard 10 categories. 104–112 are transition metals, 113–116 post-transition metals, Ts a halogen and Og a noble gas. The real game's families are unconfirmed; if they differ, rerun the solver.
-- `feedback()` in `src/solver.py` and the JS `feedback()` in `web/template.html` must stay identical. After changing either, compare them on all 118×118 pairs.
+- `feedback()` in `src/solver.py` and the JS `feedback()` in `web/templates/elementle.html.in` must stay identical. After changing either, compare them on all 118×118 pairs.
 
 ## Results so far
 
@@ -36,3 +36,7 @@ A periodic-table explorer and exact strategy study for the daily element-guessin
 ## Checking changes
 
 - Run `python src/build_html.py`, then load `dist/elementle.html` in headless Chromium (Playwright) and check for page errors. Click through the changed flows and check that a 400px-wide page doesn't scroll sideways.
+
+## Browser entry points
+
+Run `python src/build_all.py` to build all modules plus launch pages. Root `index.html`, `web/index.html` and `dist/index.html` are runnable launch pages. Named `web/*.html` URLs redirect to built modules; do not replace them with unfinished templates. Templates live under `web/templates/*.html.in`. Test both file URLs and HTTP entry paths with `src/check_entrypoints.cjs`.

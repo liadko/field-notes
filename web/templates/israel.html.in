@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>אטלס ישראל · מחברת שטח</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b1117;
+        --panel: #121f27;
+        --line: #30434b;
+        --ink: #eaf1ed;
+        --muted: #adc0bd;
+        --accent: #a6d4b2;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.65 Arial,
+          "Segoe UI",
+          sans-serif;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: inherit;
+      }
+      button,
+      a,
+      input,
+      select {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        cursor: pointer;
+      }
+      a {
+        color: var(--accent);
+      }
+      button,
+      input,
+      select {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 10px 16px;
+        min-height: 46px;
+      }
+      button:hover,
+      button.active {
+        border-color: var(--accent);
+      }
+      :focus-visible {
+        outline: 2px solid #d9e7ac;
+        outline-offset: 4px;
+      }
+      header {
+        padding: 16px 5vw;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        flex-wrap: wrap;
+      }
+      header strong {
+        font-size: 20px;
+      }
+      nav {
+        display: flex;
+        gap: 24px;
+      }
+      nav a {
+        text-decoration: none;
+        color: var(--muted);
+      }
+      nav a[aria-current] {
+        color: var(--accent);
+      }
+      main {
+        max-width: 1380px;
+        margin: auto;
+        padding: 38px 24px;
+      }
+      h1 {
+        font-size: clamp(38px, 5vw, 64px);
+        line-height: 1.15;
+        letter-spacing: -0.04em;
+        margin: 8px 0 16px;
+      }
+      h2 {
+        font-size: 28px;
+        margin: 8px 0;
+      }
+      h3 {
+        font-size: 23px;
+        margin: 5px 0;
+      }
+      p {
+        margin: 6px 0 16px;
+        color: var(--muted);
+      }
+      .kicker {
+        color: var(--accent);
+        font-size: 13px;
+      }
+      .home-intro {
+        max-width: 660px;
+      }
+      .catalog {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin: 32px 0;
+      }
+      .activity {
+        padding: 24px;
+        text-align: right;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        background: var(--panel);
+        border-top: 3px solid var(--accent);
+      }
+      .activity .number {
+        font-size: 38px;
+        color: #709b84;
+        font-weight: bold;
+        line-height: 1;
+        margin-bottom: 18px;
+      }
+      .activity p {
+        font-size: 15px;
+      }
+      .activity .go {
+        margin-top: auto;
+        color: var(--accent);
+      }
+      .activity.history-card {
+        background: #1c2428;
+        border-top-color: #cdbb8d;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 20px;
+        align-items: start;
+      }
+      .map-panel {
+        background: #102933;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .map-tools {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        padding: 10px;
+        background: #162831;
+      }
+      .map-tools button {
+        min-width: 46px;
+        padding: 5px 12px;
+      }
+      svg {
+        display: block;
+        width: 100%;
+        height: 650px;
+        touch-action: none;
+        direction: ltr;
+      }
+      .panel {
+        padding: 24px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      .panel input {
+        width: 100%;
+        margin: 8px 0;
+      }
+      .feedback {
+        min-height: 55px;
+        color: #e6d9af;
+        margin-top: 18px;
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .capital-label {
+        fill: #f1e6bf;
+        paint-order: stroke;
+        stroke: #132832;
+        stroke-width: 4px;
+        stroke-linejoin: round;
+        font: 600 14px Arial;
+        pointer-events: none;
+      }
+      .history-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 20px;
+      }
+      .timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 600px;
+        overflow: auto;
+        padding: 4px;
+      }
+      .timeline button {
+        text-align: right;
+      }
+      .date {
+        direction: ltr;
+        unicode-bidi: isolate;
+        display: inline-block;
+      }
+      .answers {
+        display: grid;
+        gap: 10px;
+        margin: 18px 0;
+      }
+      .seat-grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 5px;
+        margin: 20px 0;
+        direction: ltr;
+      }
+      .seat {
+        aspect-ratio: 1;
+        background: #34464e;
+        border-radius: 2px;
+      }
+      .seat.on {
+        background: var(--accent);
+      }
+      .big-number {
+        font-size: 48px;
+        line-height: 1.2;
+        color: var(--accent);
+      }
+      footer {
+        max-width: 1380px;
+        margin: auto;
+        padding: 30px 24px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      @media (max-width: 800px) {
+        main {
+          padding: 26px 16px;
+        }
+        .catalog {
+          grid-template-columns: 1fr 1fr;
+        }
+        .workspace,
+        .history-layout {
+          grid-template-columns: 1fr;
+        }
+        svg {
+          height: 58vh;
+          min-height: 380px;
+        }
+        .timeline {
+          flex-direction: row;
+          max-height: none;
+          overflow-x: auto;
+        }
+        .timeline button {
+          flex: 0 0 150px;
+        }
+        .panel {
+          padding: 18px;
+        }
+        .activity {
+          padding: 18px;
+          min-height: 210px;
+        }
+      }
+      @media (max-width: 440px) {
+        .catalog {
+          grid-template-columns: 1fr;
+        }
+        .activity {
+          min-height: 170px;
+        }
+        .activity .number {
+          font-size: 28px;
+          margin-bottom: 10px;
+        }
+        header {
+          gap: 12px;
+        }
+        nav {
+          gap: 18px;
+        }
+        .workspace .panel {
+          order: 2;
+        }
+      }
+    .catalog{margin-block:14px 30px}.activity{min-height:150px;border-top:1px solid var(--line);border-inline-start:3px solid #8fbaa2}.activity:hover{background:#1b3037}.activity .go{font-size:14px}.reveal.hint-pulse{stroke-width:5}.answers button{min-height:52px}.answers button:not(:disabled):active{transform:translateY(1px)}.activity p{margin-bottom:9px}#content .comparison-map{height:auto;min-height:0}#next .muted{margin-top:10px}
+@media(max-width:800px){#content .workspace .panel{grid-row:1;order:0}#content .workspace .map-panel{grid-row:2}#content .workspace .panel h2{font-size:22px}#content .workspace .panel input{margin-block:3px}.toolbar{margin-block:12px}#app h1{font-size:clamp(30px,7vw,53px)}.comparison-map text{font-size:19px}}
+.city{fill:#4a7a72;stroke:#a4cdb5;stroke-width:1;fill-opacity:.74}.city.explorable{cursor:pointer}.city.explorable:hover,.city.selected{fill:#83b9a2;stroke:#e2f6df;stroke-width:2}.city.reveal{fill:#e0be77;fill-opacity:.9;stroke:#fff0bf;stroke-width:2.5}.city.reveal.hint-pulse{stroke-width:3}.guess,.guess-distance{pointer-events:none}
+
+.map-tools #prompt,.map-tools #travel-prompt{font-size:1.1rem;line-height:1.25;margin:0;margin-inline-end:auto;align-self:center;color:#edf2ee}
+.travel-workspace .map-panel{background:#192739}
+#travel-form{display:flex;align-items:center;gap:8px}
+#travel-form[hidden]{display:none}
+#travel-form input{min-width:0}
+@media(max-width:800px){
+  #content .placement-workspace .map-panel,#content .travel-workspace .map-panel{grid-row:1}
+  #content .placement-workspace .panel,#content .travel-workspace .panel{grid-row:2}
+  #content .placement-workspace #map,#content .travel-workspace #map{height:clamp(290px,43svh,480px);min-height:0}
+  .map-activity > .toolbar{margin-block:8px}
+  #app.map-activity h1{font-size:27px;margin:.25rem 0}
+  .map-activity > .toolbar p{display:none}
+  .map-activity #back{min-height:38px;padding:5px 12px}
+  .map-activity .map-tools .muted{display:none}
+  .map-activity .map-tools button{min-height:36px}
+  .map-activity #map-filters,.map-activity .compact-filters{gap:6px 12px;margin:7px 0;font-size:.88rem}
+  .map-activity #map-filters select,.map-activity .compact-filters select,.map-activity .compact-filters button{min-height:36px;padding:4px 10px}
+}
+
+#map .city-hidden{visibility:hidden;pointer-events:none}
+#map .city-discovered:not(.reveal){fill:#557c68;stroke:#b4d8bf;fill-opacity:.75}
+.placement-feedback{font-size:14px;padding:8px 12px;margin:0;background:#172830}
+.placement-feedback:empty{display:none}
+
+#placement-clock{align-self:center;font-variant-numeric:tabular-nums;color:#f6d795;background:#263744;padding:2px 8px;border-radius:5px}
+.placement-header #prompt{font-size:clamp(1.5rem,5vw,2.25rem);line-height:1.1}
+.map-canvas{position:relative}
+.map-overlay-controls{position:absolute;inset-block-start:8px;inset-inline-end:8px;display:flex;gap:4px}
+.map-overlay-controls button{display:grid;place-items:center;width:36px;height:36px;min-height:0;padding:0;font-size:1.15rem;background:#142630}
+.placement-play{background:#f6d795;color:#16222a;font-weight:700}
+.placement-play:hover{background:#ffe5ab;color:#16222a}
+.placement-play[hidden]{display:none}
+.placement-history{width:min(540px,calc(100vw - 32px));max-height:80dvh;overflow:auto;color:#e8f4ef;background:#172933;border:1px solid #5b797e;border-radius:10px;padding:18px}
+.placement-history::backdrop{background:#071119b8}
+.placement-history h2{margin:0 0 12px}
+.placement-history-row{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid #3d545b;padding:9px 0;margin:0}
+.placement-history-row time{color:#f6d795;font-variant-numeric:tabular-nums}
+.placement-history>button{margin-top:14px}
+.leader-review{display:grid;grid-template-columns:minmax(88px,140px) minmax(0,1fr);align-items:start;gap:clamp(12px,3vw,24px);margin-block:16px}
+.leader-review p{margin-block-start:0}
+.leader-portrait{margin:0;min-width:0}
+.leader-portrait img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;object-position:center 25%;border-radius:8px;background:#223a43}
+.leader-portrait figcaption{font-size:.72rem;line-height:1.35;margin-block-start:6px;overflow-wrap:anywhere}
+.event-portraits{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,140px));gap:14px;margin-block-start:16px}
+.city-photo{margin:14px 0 0}
+.city-photo img{display:block;width:100%;max-height:235px;object-fit:cover;border-radius:8px}
+.city-photo figcaption{margin-block-start:6px;font-size:.72rem}
+@media(max-width:450px){.leader-review{grid-template-columns:90px minmax(0,1fr)}}
+</style>
+  </head>
+  <body>
+    <!--FIELDNOTES_NAV-->
+    <main id="app"></main>
+    <footer>City locations from <a href="https://www.geonames.org/">GeoNames</a> (CC BY). Map from Natural Earth. Municipal outlines from the <a href="https://gisdata-moinil.opendata.arcgis.com/datasets/069298e81f8e4e6fb96aa59913c113cd">Ministry of the Interior boundary layer</a>, simplified for display. City tiers include places matched to this layer. Selected roads from the <a href="https://services6.arcgis.com/cVWaUzg6vKvkxemk/ArcGIS/rest/services/Map/FeatureServer/0">ROUTES layer</a> (partial coverage). Historical coverage through 2022. See the <a href="https://www.gov.il/apps/pmo/history/historyPrimeMinisters.html">Prime Minister’s Office archive</a> and the <a href="https://main.knesset.gov.il/mk/elections/Pages/default.aspx">Knesset election archive</a>.</footer>
+    <script>
+      /*__D3__*/
+    </script>
+    <script>
+      /*__TOPO__*/
+    </script>
+    <script>
+      /*__GAME__*/
+    </script>
+  </body>
+</html>

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Brain · Fieldnotes</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #101219;
+        --panel: #191e29;
+        --line: #353d4b;
+        --text: #f0ede7;
+        --muted: #b1b5bf;
+        --accent: #d3b58e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font:
+          16px/1.55 "Segoe UI",
+          system-ui,
+          sans-serif;
+      }
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+      a {
+        color: var(--accent);
+      }
+      button {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: 5px;
+        padding: 10px 15px;
+        min-height: 46px;
+        text-align: left;
+      }
+      button:hover,
+      button.active {
+        border-color: var(--accent);
+        background: #252b36;
+      }
+      :focus-visible {
+        outline: 3px solid #f3d2a2;
+        outline-offset: 4px;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+      header {
+        padding: 16px 5vw;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 35px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      header strong {
+        font-size: 23px;
+        letter-spacing: -0.04em;
+      }
+      header strong span {
+        color: var(--accent);
+      }
+      nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 22px;
+      }
+      nav a {
+        text-decoration: none;
+        color: var(--muted);
+      }
+      nav a[aria-current] {
+        color: var(--accent);
+      }
+      main {
+        max-width: 1380px;
+        margin: auto;
+        padding: 34px 24px;
+      }
+      h1 {
+        font-size: clamp(36px, 5.2vw, 68px);
+        letter-spacing: -0.055em;
+        line-height: 1.05;
+        margin: 12px 0 20px;
+      }
+      h2 {
+        font-size: 28px;
+        line-height: 1.2;
+        margin: 10px 0;
+      }
+      h3 {
+        font-size: 21px;
+        margin: 10px 0;
+      }
+      p {
+        color: var(--muted);
+        margin: 8px 0 18px;
+      }
+      .kicker {
+        color: var(--accent);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .intro {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        align-items: center;
+      }
+      .intro-copy {
+        max-width: 540px;
+      }
+      .intro-art {
+        background: #151a23;
+        border: 1px solid var(--line);
+        border-radius: 50% 50% 5px 5px;
+        overflow: hidden;
+      }
+      .intro-art svg {
+        max-height: 300px;
+      }
+      .catalog {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin: 32px 0;
+      }
+      .activity {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        min-height: 205px;
+        border-top: 3px solid var(--accent);
+      }
+      .activity .tag {
+        color: var(--accent);
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .activity p {
+        font-size: 15px;
+      }
+      .activity .go {
+        margin-top: auto;
+        color: var(--accent);
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 18px 0;
+      }
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 20px;
+        align-items: start;
+      }
+      .diagram {
+        background: #151b25;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        overflow: hidden;
+      }
+      .diagram-tools {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+      }
+      svg {
+        width: 100%;
+        display: block;
+        max-height: 560px;
+      }
+      svg .region {
+        stroke: #101b28;
+        stroke-width: 3;
+        cursor: pointer;
+        transition:
+          filter 0.15s,
+          opacity 0.15s;
+      }
+      svg .region:hover,
+      svg .region:focus {
+        filter: brightness(1.2);
+        outline: none;
+        stroke: #fff1cf;
+        stroke-width: 4;
+      }
+      svg .selected {
+        stroke: #fff1c7;
+        stroke-width: 5;
+      }
+      svg .dim {
+        opacity: 0.25;
+      }
+      .diagram-note {
+        font-size: 12px;
+        margin: 0;
+        padding: 12px 18px;
+        border-top: 1px solid var(--line);
+      }
+      .panel {
+        padding: 24px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 7px;
+      }
+      .panel .he {
+        color: var(--accent);
+        font-size: 17px;
+      }
+      .region-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 18px 0;
+      }
+      .region-list button {
+        font-size: 13px;
+        padding: 7px 10px;
+        min-height: 44px;
+      }
+      .feedback {
+        color: #e7d5b7;
+        min-height: 28px;
+        margin: 18px 0;
+      }
+      .answers {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 20px 0;
+      }
+      .answers button.correct {
+        border-color: #a5c4a7;
+        background: #253b32;
+      }
+      .answers button.incorrect {
+        border-color: #d79d91;
+      }
+      .progress {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .source {
+        font-size: 13px;
+      }
+      .quiz-card {
+        max-width: 850px;
+        margin: 26px auto;
+      }
+      .statement {
+        font-size: clamp(24px, 3vw, 34px);
+        line-height: 1.4;
+        color: var(--text);
+      }
+      .chain {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 24px 0;
+      }
+      .chain-step {
+        border: 1px dashed #707b8c;
+        border-radius: 6px;
+        min-height: 110px;
+        padding: 18px;
+      }
+      .chain-step.filled {
+        border-style: solid;
+        border-color: var(--accent);
+      }
+      .chain-step small {
+        display: block;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+      .big {
+        font-size: 48px;
+        color: var(--accent);
+      }
+      details {
+        margin: 20px 0;
+        border-top: 1px solid var(--line);
+        padding-top: 18px;
+      }
+      summary {
+        cursor: pointer;
+        color: var(--accent);
+      }
+      footer {
+        max-width: 1380px;
+        padding: 30px 24px;
+        margin: auto;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .map-label {
+        font:
+          600 15px "Segoe UI",
+          sans-serif;
+        fill: #141923;
+        pointer-events: none;
+        text-anchor: middle;
+      }
+      .orientation {
+        font:
+          13px "Segoe UI",
+          sans-serif;
+        fill: #b4bcc8;
+      }
+      .schematic-outline {
+        fill: #242d39;
+        stroke: #667484;
+        stroke-width: 2;
+      }
+      .sources-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      @media (max-width: 800px) {
+        .intro {
+          grid-template-columns: 1fr;
+        }
+        .intro-art {
+          display: none;
+        }
+        .catalog {
+          grid-template-columns: 1fr 1fr;
+        }
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+        .panel {
+          padding: 18px;
+        }
+        .chain {
+          grid-template-columns: 1fr 1fr;
+        }
+        main {
+          padding: 26px 16px;
+        }
+        .quiz-card {
+          margin: 18px 0;
+        }
+        .diagram svg {
+          min-height: 300px;
+        }
+      }
+      @media (max-width: 450px) {
+        .catalog {
+          grid-template-columns: 1fr;
+        }
+        .activity {
+          min-height: 170px;
+        }
+        .answers {
+          grid-template-columns: 1fr;
+        }
+        .diagram-tools button {
+          padding: 8px 10px;
+        }
+        .sources-grid {
+          grid-template-columns: 1fr;
+        }
+        header {
+          gap: 12px;
+        }
+        nav {
+          gap: 16px;
+        }
+        .map-label {
+          font-size: 17px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    .answer-diagram{max-width:440px;margin:12px auto;background:#151b25;border:1px solid #39434f;border-radius:8px}.quiz-card #next button{margin-top:14px}.workspace .region-list{padding-inline:12px}.region.hint-pulse{stroke:#ffe59c;stroke-width:7}.diagram svg .region{pointer-events:visiblePainted}.catalog .activity:hover{box-shadow:0 6px 16px #090b1055}.catalog .activity{transition:background-color .16s,box-shadow .16s}
+@media(max-width:800px){.workspace .panel{grid-row:1}.workspace .panel #reveal{margin-top:10px}}
+ .answer-diagram .map-label{fill:#f3eee7;paint-order:stroke;stroke:#162231;stroke-width:2.5}.answer-diagram svg{max-height:285px}.quiz-card{margin-top:12px}#app:has(.quiz-card) .toolbar h1{font-size:clamp(32px,4vw,48px)}.quiz-card .statement{font-size:clamp(18px,2.5vw,25px)}
+</style>
+  </head>
+  <body>
+    <!--FIELDNOTES_NAV-->
+    <main id="app"></main>
+    <footer>
+      Learning diagrams are simplified, not anatomical slices. Functions involve
+      interacting networks.
+      <details>
+        <summary>Sources & scope</summary>
+        <p>
+          12 introductory landmarks, rather than a complete brain atlas.
+          Internal landmarks are separated schematically for selection; several
+          are not visible in a true midline section. Hebrew terms accompany
+          English region names.
+        </p>
+        <div class="sources-grid" id="sources"></div>
+      </details>
+    </footer>
+    <script>
+      /*__GAME__*/
+    </script>
+  </body>
+</html>

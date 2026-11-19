@@ -1,0 +1,951 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementle</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one Mendeleev table is the stage for every mode; the empty bay above
+   the transition metals holds the live readout, like the key on a wall chart. */
+:root {
+  color-scheme: dark;
+  --bg: #0a0d14;
+  --panel: #111622;
+  --panel-2: #161d2c;
+  --line: #222b3d;
+  --fg: #e7eaf2;
+  --muted: #8d96aa;
+  --faint: #5a6378;
+  --accent: #f0c766;
+  --hit: #3fb871;
+  --near: #d4a72c;
+  --miss: #353d50;
+  --bad: #e06a5a;
+
+  --c-alkali: #e5675a;
+  --c-alkaline: #e89a4f;
+  --c-post: #d6bf5a;
+  --c-metalloid: #a5c45a;
+  --c-nonmetal: #5cc79a;
+  --c-noble: #4fc2d0;
+  --c-transition: #5b8fe6;
+  --c-halogen: #9c84e8;
+  --c-lanthanide: #cf7ad6;
+  --c-actinide: #e3739f;
+
+  --font-display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --step--1: 0.8125rem;
+  --step-0: 0.9375rem;
+  --step-1: 1.125rem;
+  --step-2: 1.5rem;
+  --step-3: 2.25rem;
+  --step-4: 3.5rem;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 var(--step-0)/1.55 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 64px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1240px; margin: 0 auto; }
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* ---------- header ---------- */
+header.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))) 24px;
+  padding: 12px max(16px, env(safe-area-inset-left, 0px));
+}
+header.top .wrap { display: flex; align-items: center; gap: 16px 28px; flex-wrap: wrap; }
+.brand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; }
+.brand h1 { margin: 0; font: 700 var(--step-2)/1 var(--font-display); letter-spacing: -0.01em; }
+.brand h1 b { color: var(--accent); font-weight: 700; }
+.brand span { color: var(--muted); font-size: var(--step--1); }
+.tabs { display: flex; gap: 2px; margin-left: auto; background: var(--panel); border: 1px solid var(--line); padding: 3px; border-radius: 3px; }
+.tabs button {
+  border: 0; background: transparent; padding: 7px 16px; border-radius: 2px;
+  font: 600 var(--step-0)/1 var(--font-display); color: var(--muted); letter-spacing: 0.01em;
+}
+.tabs button[aria-selected="true"] { background: var(--panel-2); color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+.tabs button:hover { color: var(--fg); }
+
+/* ---------- toolbar per mode ---------- */
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-bottom: 14px; min-height: 40px; }
+.toolbar .lead { font: 600 var(--step-1)/1.3 var(--font-display); margin-right: auto; }
+.toolbar .lead small { display: block; font: 400 var(--step--1)/1.4 var(--font-body); color: var(--muted); }
+.btn {
+  border: 1px solid var(--line); background: var(--panel); padding: 8px 14px; border-radius: 3px;
+  font-weight: 600; font-size: var(--step--1); letter-spacing: 0.02em;
+}
+.btn:hover { border-color: var(--faint); background: var(--panel-2); }
+.btn.primary { background: var(--accent); color: #1a1408; border-color: var(--accent); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
+.seg button { border: 0; background: var(--panel); padding: 8px 12px; font-size: var(--step--1); font-weight: 600; color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--panel-2); color: var(--fg); box-shadow: inset 0 -2px 0 var(--accent); }
+input[type="search"] {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 8px 12px; width: 220px; max-width: 100%;
+}
+
+/* ---------- periodic table ---------- */
+.table-scroll { overflow-x: auto; padding-bottom: 6px; }
+.ptable {
+  display: grid; grid-template-columns: repeat(18, minmax(0, 1fr)); grid-template-rows: repeat(7, auto) 14px auto auto;
+  gap: 4px; min-width: 900px; position: relative;
+}
+.tile {
+  --c: var(--faint);
+  position: relative; aspect-ratio: 1 / 1.08; border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+  background: color-mix(in srgb, var(--c) 13%, var(--panel)); border-radius: 2px; padding: 4px 5px 3px;
+  display: flex; flex-direction: column; text-align: left; min-width: 0; overflow: hidden;
+  transition: opacity .25s, filter .25s, transform .15s, border-color .15s, background .15s;
+}
+.tile:hover { border-color: var(--c); background: color-mix(in srgb, var(--c) 24%, var(--panel)); transform: translateY(-1px); }
+.tile .z { font: 400 10px/1 var(--font-data); color: var(--muted); }
+.tile .sym { font: 700 clamp(15px, 1.6vw, 21px)/1.05 var(--font-display); color: var(--c); margin-top: auto; letter-spacing: -0.01em; }
+.tile .nm { font-size: 9.5px; line-height: 1.2; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .badge {
+  position: absolute; top: 3px; right: 4px; font: 600 11px/1 var(--font-data); padding: 2px 4px; border-radius: 2px;
+  background: var(--bg); color: var(--fg);
+}
+.tile.out { opacity: .16; filter: grayscale(1); }
+.tile.out:hover { opacity: .5; }
+.tile.dim { opacity: .28; }
+.tile.guessed::after { content: ""; position: absolute; inset: -1px; border: 2px solid var(--fg); border-radius: 2px; pointer-events: none; }
+.tile.current { box-shadow: 0 0 0 2px var(--accent), 0 0 18px color-mix(in srgb, var(--accent) 45%, transparent); z-index: 1; }
+.tile.secret::before { content: ""; position: absolute; inset: 2px; border: 1px dashed var(--fg); border-radius: 1px; pointer-events: none; }
+.tile.sel { box-shadow: 0 0 0 2px var(--fg); z-index: 1; }
+.tile.won { box-shadow: 0 0 0 2px var(--hit), 0 0 22px color-mix(in srgb, var(--hit) 55%, transparent); z-index: 1; }
+.slot {
+  border: 1px dashed var(--line); border-radius: 2px; display: grid; place-items: center; text-align: center;
+  font: 400 10px/1.3 var(--font-data); color: var(--faint);
+}
+.gaprow { grid-column: 1 / -1; }
+
+.cat-alkali.cat-alkali { --c: var(--c-alkali); }
+.cat-alkaline.cat-alkaline { --c: var(--c-alkaline); }
+.cat-transition.cat-transition { --c: var(--c-transition); }
+.cat-post.cat-post { --c: var(--c-post); }
+.cat-metalloid.cat-metalloid { --c: var(--c-metalloid); }
+.cat-nonmetal.cat-nonmetal { --c: var(--c-nonmetal); }
+.cat-halogen.cat-halogen { --c: var(--c-halogen); }
+.cat-noble.cat-noble { --c: var(--c-noble); }
+.cat-lanthanide.cat-lanthanide { --c: var(--c-lanthanide); }
+.cat-actinide.cat-actinide { --c: var(--c-actinide); }
+
+/* the bay above the transition metals */
+.bay {
+  grid-column: 3 / 13; grid-row: 1 / 4; align-self: stretch; min-width: 0;
+  display: flex; flex-direction: column; justify-content: flex-start; padding: 2px 12px 8px; overflow: hidden;
+}
+
+/* explore card */
+.card { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; align-items: start; }
+.bigtile {
+  --c: var(--faint); width: 116px; aspect-ratio: 1 / 1.08; border: 1px solid var(--c); border-radius: 2px;
+  background: color-mix(in srgb, var(--c) 18%, var(--panel)); padding: 8px 10px; display: flex; flex-direction: column;
+}
+.bigtile .z { font: 600 var(--step--1)/1 var(--font-data); color: var(--muted); }
+.bigtile .sym { font: 700 46px/1 var(--font-display); color: var(--c); margin-top: auto; }
+.bigtile .m { font: 400 11px/1.4 var(--font-data); color: var(--muted); }
+.card h2 { margin: 0; font: 700 var(--step-3)/1 var(--font-display); letter-spacing: -0.02em; }
+.card .catline { display: flex; gap: 10px; align-items: center; margin-top: 6px; color: var(--muted); font-size: var(--step--1); flex-wrap: wrap; }
+.chip { display: inline-block; padding: 2px 8px; border-radius: 2px; font: 600 11px/1.5 var(--font-body); letter-spacing: .04em; text-transform: uppercase;
+  color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); }
+.card .fact { grid-column: 1 / -1; font-size: var(--step-0); color: var(--fg); margin: 6px 0 0; max-width: 62ch; }
+.card .fact::before { content: "Fun fact  "; font: 600 11px/1 var(--font-body); color: var(--accent); letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---------- legend ---------- */
+.legend { margin: 16px 0 0; }
+.legend-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.legend-row + .legend-row { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.legend-label { font: 600 11px/1 var(--font-body); color: var(--muted); letter-spacing: .1em; text-transform: uppercase; width: 100px; flex: none; }
+.legend .collections button { background: transparent; border-style: dashed; color: var(--fg); }
+.legend .collections button[aria-pressed="true"] { border: 1px solid var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.gcard { --c: var(--accent); display: flex; flex-direction: column; gap: 6px; }
+.gcard .eyebrow { display: flex; align-items: center; gap: 8px; margin: 0; }
+.gcard .swatch { width: 12px; height: 12px; background: var(--c); border-radius: 1px; }
+.gcard h2 { margin: 0; font: 700 var(--step-3)/1 var(--font-display); letter-spacing: -0.02em; color: var(--c); }
+.gcard .gsum { margin: 0; max-width: 64ch; }
+.firsts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-top: 4px; }
+.firsts .lab { font: 600 11px/1 var(--font-body); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.firsts .when { font: 500 var(--step--1)/1 var(--font-data); color: var(--fg); margin-right: 14px; }
+.gprose p { margin: 0 0 14px; }
+.gprose .eyebrow { margin: 0 0 6px; }
+.timeline { display: flex; flex-direction: column; gap: 6px; max-height: 420px; overflow-y: auto; }
+.tl-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: center; }
+.tl-year { font: 500 var(--step--1)/1 var(--font-data); color: var(--muted); text-align: right; }
+.inchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.inchip { background: transparent; border: 1px dashed var(--line); border-radius: 2px; padding: 5px 9px; font-size: var(--step--1); }
+.inchip:hover { border-color: var(--accent); color: var(--accent); }
+.legend button {
+  --c: var(--faint); display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 2px;
+  background: var(--panel); border: 1px solid var(--line); font-size: var(--step--1); color: var(--fg);
+}
+.legend button i { width: 12px; height: 12px; background: var(--c); border-radius: 1px; }
+.legend button span { color: var(--muted); font-family: var(--font-data); font-size: 11px; }
+.legend button[aria-pressed="true"] { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, var(--panel)); }
+
+/* ---------- panels under the table ---------- */
+.below { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; margin-top: 22px; }
+@media (max-width: 860px) { .below { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px; padding: 18px 20px; min-width: 0; }
+.panel h3 { margin: 0 0 12px; font: 600 var(--step-1)/1.25 var(--font-display); text-wrap: balance; }
+.eyebrow { font: 600 11px/1 var(--font-body); color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 8px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px 18px; margin: 0; }
+.stats div { min-width: 0; }
+.stats dt { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.stats dd { margin: 2px 0 0; font: 500 var(--step-0)/1.35 var(--font-data); overflow-wrap: anywhere; }
+.prose { max-width: 66ch; color: var(--fg); }
+.prose p { margin: 0 0 12px; }
+.prose .muted, .muted { color: var(--muted); }
+
+/* ---------- feedback rows ---------- */
+.rows { display: flex; flex-direction: column; gap: 6px; }
+.row { display: grid; grid-template-columns: 28px auto auto auto minmax(0, 1fr); align-items: center; gap: 6px; }
+.row .n { font: 600 var(--step--1)/1 var(--font-data); color: var(--faint); text-align: right; }
+.letters { display: flex; gap: 3px; }
+.fb {
+  min-width: 38px; height: 38px; display: grid; place-items: center; border-radius: 2px; padding: 0 8px;
+  font: 700 var(--step-1)/1 var(--font-display); background: var(--miss); color: var(--fg);
+}
+.fb.g { background: var(--hit); color: #06150c; }
+.fb.y { background: var(--near); color: #1d1503; }
+.fb.num { font: 600 var(--step-0)/1 var(--font-data); gap: 4px; display: flex; min-width: 70px; justify-content: center; }
+.fb.num.eq { background: var(--hit); color: #06150c; }
+.fb.cat { font: 600 11px/1.15 var(--font-body); letter-spacing: .03em; text-transform: uppercase; min-width: 108px; text-align: center; }
+.row .who { font-size: var(--step--1); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .who b { color: var(--fg); font-weight: 600; }
+.row.active .n { color: var(--accent); }
+.row.click { cursor: pointer; border-radius: 3px; }
+.row.click:hover .who b { text-decoration: underline; }
+.row.future { opacity: .35; }
+@media (max-width: 520px) {
+  .row { grid-template-columns: 22px auto auto auto; }
+  .row .who { grid-column: 2 / -1; }
+  .fb { min-width: 32px; height: 32px; }
+  .fb.cat { min-width: 84px; font-size: 10px; }
+}
+
+.bay .status { font: 600 var(--step-2)/1.15 var(--font-display); margin: 4px 0 6px; text-wrap: balance; }
+.bay .status em { font-style: normal; color: var(--accent); }
+.bay .sub { color: var(--muted); font-size: var(--step--1); margin: 0 0 10px; max-width: 60ch; }
+.bay .rows .fb { min-width: 30px; height: 30px; font-size: var(--step-0); }
+.bay .rows .fb.cat { min-width: 96px; font-size: 10px; }
+.bay .rows .fb.num { min-width: 60px; font-size: var(--step--1); }
+
+/* ---------- histogram & bars ---------- */
+.hist { display: grid; grid-template-columns: 70px minmax(0, 1fr) 40px; gap: 6px 10px; align-items: center; font-size: var(--step--1); }
+.hist .bar { height: 18px; background: var(--miss); border-radius: 1px; position: relative; }
+.hist .bar i { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 1px; }
+.hist .lab { color: var(--muted); }
+.hist .val { font-family: var(--font-data); text-align: right; }
+
+.compare { width: 100%; border-collapse: collapse; font-size: var(--step--1); }
+.compare th, .compare td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.compare th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .07em; }
+.compare td.num { font-family: var(--font-data); text-align: right; }
+.compare th.num { text-align: right; }
+.compare tr.on td { background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.compare tr.pick { cursor: pointer; }
+.compare tr.pick:hover td { background: var(--panel-2); }
+.scroll-x { overflow-x: auto; }
+
+.groups { display: flex; flex-direction: column; gap: 8px; }
+.group { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.group:last-child { border-bottom: 0; }
+.group .key { display: flex; gap: 3px; align-items: center; }
+.group .key .fb { min-width: 24px; height: 24px; font-size: 12px; padding: 0 5px; }
+.group .key .fb.num { min-width: 30px; }
+.group .key .fb.cat { min-width: 24px; font-size: 10px; }
+.group .members { display: flex; flex-wrap: wrap; gap: 3px; }
+.mini {
+  --c: var(--faint); font: 600 12px/1 var(--font-display); color: var(--c); padding: 4px 5px; min-width: 26px; text-align: center;
+  background: color-mix(in srgb, var(--c) 14%, var(--panel)); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); border-radius: 2px;
+}
+button.mini:hover { border-color: var(--c); }
+.count { font: 600 11px/1 var(--font-data); color: var(--muted); margin-left: 6px; align-self: center; }
+
+.treehead { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.trail { margin: 0 0 16px; padding: 0 0 14px; border-bottom: 1px solid var(--line); }
+.trail .row { cursor: pointer; }
+.trail .row:hover .who b { text-decoration: underline; }
+button.group { width: 100%; background: transparent; border: 0; border-bottom: 1px solid var(--line); text-align: left; cursor: pointer; padding: 8px 6px; border-radius: 2px; }
+button.group:hover { background: var(--panel-2); }
+button.group:last-child { border-bottom: 0; }
+.group .more { margin-left: auto; align-self: center; font: 600 11px/1 var(--font-body); color: var(--accent); letter-spacing: .03em; white-space: nowrap; padding-left: 8px; }
+.findings { max-width: none; }
+.findings > * { max-width: 72ch; }
+.steps { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 12px 0 0; }
+
+.research { margin-top: 28px; }
+.research h2 { font: 700 var(--step-3)/1.05 var(--font-display); margin: 0 0 6px; letter-spacing: -0.02em; text-wrap: balance; }
+.research > .wrap-in > p.lede { color: var(--muted); max-width: 66ch; margin: 0 0 20px; font-size: var(--step-1); }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+
+.opener-chart { display: block; width: 100%; height: auto; }
+.opener-chart text { fill: var(--muted); font: 10px var(--font-data); }
+.opener-chart .lbl { fill: var(--fg); font: 600 11px var(--font-display); }
+
+@media (max-width: 600px) { .legend-label { width: 100%; } .tl-row { grid-template-columns: 70px minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+.element-photo{display:grid;gap:6px;margin:16px 0 0}
+.element-photo img{display:block;max-width:100%;width:auto;max-height:190px;object-fit:contain;border-radius:8px}
+.element-photo figcaption{font-size:var(--step--1);overflow-wrap:anywhere}
+.element-photo figcaption a{display:block;color:var(--muted)}
+</style>
+
+<!--FIELDNOTES_NAV-->
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>Element<b>le</b></h1></div>
+    <nav class="tabs" role="tablist" aria-label="Mode">
+      <button id="tab-explore" role="tab" aria-selected="true" data-mode="explore">Explore</button>
+      <button id="tab-play" role="tab" aria-selected="false" data-mode="play">Play</button>
+      <button id="tab-strategy" role="tab" aria-selected="false" data-mode="strategy">Strategy</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="toolbar" id="toolbar"></div>
+  <div class="table-scroll"><div class="ptable" id="ptable"><div class="bay" id="bay"></div></div></div>
+  <div class="legend" id="legend"></div>
+  <div id="below"></div>
+  <section class="research" id="research" hidden></section>
+</main>
+
+<script>
+const ELEMENTS = /*__ELEMENTS__*/null;
+const ELEMENT_PHOTOS = /*__ELEMENT_PHOTOS__*/null;
+const DATA = /*__STRATEGIES__*/null;
+const GROUPS = /*__GROUPS__*/null;
+
+const CATS = [
+  ["alkali metal", "alkali", "Alkali metal"],
+  ["alkaline earth metal", "alkaline", "Alkaline earth"],
+  ["transition metal", "transition", "Transition metal"],
+  ["post-transition metal", "post", "Post-transition"],
+  ["metalloid", "metalloid", "Metalloid"],
+  ["reactive nonmetal", "nonmetal", "Reactive nonmetal"],
+  ["halogen", "halogen", "Halogen"],
+  ["noble gas", "noble", "Noble gas"],
+  ["lanthanide", "lanthanide", "Lanthanide"],
+  ["actinide", "actinide", "Actinide"],
+];
+const CAT_CLASS = Object.fromEntries(CATS.map(([k, c]) => [k, c]));
+const CAT_LABEL = Object.fromEntries(CATS.map(([k, , l]) => [k, l]));
+const CAT_PLURAL = { "alkali metal": "Alkali metals", "alkaline earth metal": "Alkaline earth metals", "transition metal": "Transition metals",
+  "post-transition metal": "Post-transition metals", "metalloid": "Metalloids", "reactive nonmetal": "Reactive nonmetals", "halogen": "Halogens",
+  "noble gas": "Noble gases", "lanthanide": "Lanthanides", "actinide": "Actinides" };
+const N = ELEMENTS.length;
+const el = z => ELEMENTS[z - 1];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function elementPhoto(number) {
+  const photo = ELEMENT_PHOTOS[number];
+  if (!photo) return "";
+  const [credit] = photo.credit.split(" <");
+  return `<figure class="element-photo"><img src="${esc(photo.src)}" alt="${esc(photo.title)}" loading="lazy">
+    <figcaption>${esc(photo.title)}<a href="${esc(photo.source)}" target="_blank" rel="noopener">${esc(credit)} · resized</a></figcaption></figure>`;
+}
+
+/* Same rules as solver.py: "<colors>|<dir>|<cat>", colors g/y/x per guessed letter,
+   dir u = secret higher, d = lower, = solved; cat 1 = same category. */
+function feedback(gz, sz) {
+  const gs = el(gz).symbol.toLowerCase(), ss = el(sz).symbol.toLowerCase();
+  const colors = [...gs].map((ch, i) => (i < ss.length && ss[i] === ch ? "g" : "x"));
+  // Secret letters not matched in place, including any past the guess's
+  // length: guessing C against Sc gives a yellow C.
+  const left = [...ss].filter((ch, i) => !(i < gs.length && gs[i] === ch));
+  for (let i = 0; i < gs.length; i++) {
+    const j = left.indexOf(gs[i]);
+    if (colors[i] === "x" && j >= 0) { colors[i] = "y"; left.splice(j, 1); }
+  }
+  const d = gz === sz ? "=" : sz > gz ? "u" : "d";
+  return `${colors.join("")}|${d}|${el(gz).category === el(sz).category ? 1 : 0}`;
+}
+const FB = Array.from({ length: N + 1 }, (_, g) => g === 0 ? null : Array.from({ length: N + 1 }, (_, s) => s === 0 ? null : feedback(g, s)));
+const ALL = ELEMENTS.map(e => e.number);
+
+function consistent(guesses, cands = ALL) {
+  // guesses: [{z, fb}]
+  return cands.filter(s => guesses.every(g => FB[g.z][s] === g.fb));
+}
+function partition(cands, g) {
+  const m = new Map();
+  for (const s of cands) { if (s === g) continue; const k = FB[g][s]; if (!m.has(k)) m.set(k, []); m.get(k).push(s); }
+  return [...m.entries()].sort((a, b) => b[1].length - a[1].length);
+}
+
+/* ---------- strategy trees ---------- */
+const STRATS = DATA.strategies;
+const STRAT_KEYS = ["optimal", "average", "greedy", "binary", "tantalum"].filter(k => STRATS[k]);
+const depthCache = {};
+function depthMap(key) {
+  if (depthCache[key]) return depthCache[key];
+  // Replay each secret: a tree may guess a ruled-out element at several nodes.
+  const out = {};
+  for (const s of ALL) out[s] = playOut(key, s).length;
+  return (depthCache[key] = out);
+}
+function playOut(key, secret) {
+  const steps = []; let node = STRATS[key].tree, cands = ALL;
+  for (;;) {
+    const fb = FB[node.g][secret];
+    const after = consistent([{ z: node.g, fb }], cands);
+    steps.push({ z: node.g, fb, before: cands, after });
+    if (node.g === secret) break;
+    cands = after; node = node.k[fb];
+  }
+  return steps;
+}
+/* A position in a strategy's tree: the answers received so far (path) decide
+   the guesses made, the candidates left (pool) and the strategy's next guess. */
+function nodeAt(key, path) {
+  let node = STRATS[key].tree;
+  const guesses = [];
+  for (const fb of path) { guesses.push({ z: node.g, fb }); node = node.k[fb]; }
+  return { node, guesses, pool: consistent(guesses) };
+}
+function pathTo(key, secret) { return playOut(key, secret).slice(0, -1).map(x => x.fb); }
+function stratView() {
+  const s = state.strat, v = nodeAt(s.key, s.path);
+  v.found = s.secret != null && v.node.g === s.secret;
+  return v;
+}
+
+/* ---------- render helpers ---------- */
+function fbHTML(z, fb, compact = false) {
+  const [colors, dir, cat] = fb.split("|");
+  const sym = el(z).symbol;
+  const letters = [...sym].map((ch, i) => `<span class="fb ${colors[i] === "x" ? "" : colors[i]}">${esc(ch)}</span>`).join("");
+  const arrow = dir === "=" ? "=" : dir === "u" ? "↑" : "↓";
+  const numTitle = dir === "=" ? "Correct" : dir === "u" ? "The secret has a higher atomic number" : "The secret has a lower atomic number";
+  const num = `<span class="fb num ${dir === "=" ? "eq" : ""}" title="${numTitle}">${compact ? "" : z + " "}${arrow}</span>`;
+  const catTxt = compact ? (cat === "1" ? "✓" : "✗") : esc(CAT_LABEL[el(z).category]);
+  const catEl = `<span class="fb cat ${cat === "1" ? "g" : ""}" title="${cat === "1" ? "Same category" : "Different category"}">${catTxt}</span>`;
+  return `<span class="letters">${letters}</span>${num}${catEl}`;
+}
+function rowHTML(i, z, fb, extra = "", cls = "") {
+  return `<div class="row ${cls}" data-step="${i}"><span class="n">${i + 1}</span>${fbHTML(z, fb)}<span class="who"><b>${esc(el(z).name)}</b>${extra}</span></div>`;
+}
+function miniHTML(z, clickable = false) {
+  const e = el(z), tag = clickable ? "button" : "span";
+  return `<${tag} class="mini cat-${CAT_CLASS[e.category]}" ${clickable ? `data-z="${z}" title="${esc(e.name)}"` : `title="${esc(e.name)}"`}>${esc(e.symbol)}</${tag}>`;
+}
+
+/* ---------- categories & collections ---------- */
+const COLLECTIONS = Object.fromEntries(GROUPS.collections.map(c => [c.id, c]));
+function groupOf(g) {
+  if (g.kind === "cat") {
+    const info = GROUPS.categories[g.id];
+    return { kindLabel: "Category", name: CAT_PLURAL[g.id], cls: `cat-${CAT_CLASS[g.id]}`, summary: info.summary,
+      sections: [["History", info.history], ["Where the edges are", info.edges], ["How to remember", info.remember]],
+      members: ELEMENTS.filter(e => e.category === g.id).map(e => e.number) };
+  }
+  const c = COLLECTIONS[g.id];
+  return { kindLabel: "Collection", name: c.name, cls: "", summary: c.detail, sections: [], members: [...c.members].sort((a, b) => a - b) };
+}
+const yearKey = z => el(z).year ?? -1e5;
+function firstAndLatest(members) {
+  const keys = members.map(yearKey), lo = Math.min(...keys), hi = Math.max(...keys);
+  return { first: members.filter(z => yearKey(z) === lo), latest: members.filter(z => yearKey(z) === hi) };
+}
+function whenHTML(list) {
+  return `${list.map(z => miniHTML(z, true)).join("")}<span class="when">${esc(el(list[0]).year_label)}</span>`;
+}
+function collectionsOf(z) { return GROUPS.collections.filter(c => c.members.includes(z)); }
+
+/* ---------- state ---------- */
+const state = {
+  mode: "explore",
+  sel: 73,
+  group: null,      // { kind: "cat" | "col", id }
+  focus: "element", // what the explore details show: "element" or "group"
+  query: "",
+  game: { secret: null, guesses: [], picking: false, revealed: false },
+  strat: { key: "optimal", path: [], secret: null, overlay: "depth" },
+};
+function newGame(secret = null) {
+  state.game = { secret: secret ?? ALL[Math.floor(Math.random() * N)], guesses: [], picking: false, revealed: false };
+}
+newGame();
+
+/* ---------- table ---------- */
+const table = document.getElementById("ptable");
+const bay = document.getElementById("bay");
+const tiles = {};
+(function buildTable() {
+  const frag = document.createDocumentFragment();
+  const gap = document.createElement("div"); gap.className = "gaprow"; gap.style.gridRow = "8"; frag.appendChild(gap);
+  for (const [label, row] of [["57–71", 6], ["89–103", 7]]) {
+    const s = document.createElement("div"); s.className = "slot"; s.style.gridColumn = "3"; s.style.gridRow = String(row);
+    s.textContent = label; frag.appendChild(s);
+  }
+  for (const e of ELEMENTS) {
+    const b = document.createElement("button");
+    b.className = `tile cat-${CAT_CLASS[e.category]}`;
+    b.style.gridColumn = String(e.xpos); b.style.gridRow = String(e.ypos);
+    b.dataset.z = e.number;
+    b.setAttribute("aria-label", `${e.name}, ${e.number}`);
+    b.innerHTML = `<span class="z">${e.number}</span><span class="sym">${esc(e.symbol)}</span><span class="nm">${esc(e.name)}</span><span class="badge" hidden></span>`;
+    tiles[e.number] = b; frag.appendChild(b);
+  }
+  table.appendChild(frag);
+})();
+table.addEventListener("click", ev => {
+  const mini = ev.target.closest("#bay button.mini");
+  if (mini) { state.sel = Number(mini.dataset.z); state.focus = "element"; render(); return; }
+  const t = ev.target.closest(".tile"); if (!t) return;
+  onTile(Number(t.dataset.z));
+});
+table.addEventListener("mouseover", ev => {
+  const t = ev.target.closest(".tile");
+  if (!t || state.mode !== "explore") return;
+  renderBay(Number(t.dataset.z));
+});
+table.addEventListener("mouseleave", () => { if (state.mode === "explore") renderBay(); });
+
+function onTile(z) {
+  if (state.mode === "explore") { state.sel = z; state.focus = "element"; }
+  else if (state.mode === "play") {
+    const g = state.game;
+    if (g.picking) { newGame(z); }
+    else if (!isWon() && !g.revealed && !g.guesses.some(x => x.z === z)) g.guesses.push({ z, fb: FB[z][g.secret] });
+  } else {
+    showHunt(z);
+  }
+  render();
+}
+function showHunt(z) { state.strat.secret = z; state.strat.path = pathTo(state.strat.key, z); }
+function isWon() { const g = state.game; return g.guesses.some(x => x.z === g.secret); }
+
+function paintTiles() {
+  const m = state.mode;
+  let remaining = null, guessed = new Set(), current = null, secret = null, badge = null, won = null;
+  if (m === "play") {
+    const g = state.game;
+    remaining = new Set(consistent(g.guesses));
+    g.guesses.forEach(x => guessed.add(x.z));
+    if (isWon()) won = g.secret;
+    if (g.revealed) secret = g.secret;
+  } else if (m === "strategy") {
+    const s = state.strat;
+    if (s.overlay === "depth") { const d = depthMap(s.key); badge = z => d[z]; }
+    else { const o = Object.fromEntries(DATA.openers.map(x => [x.z, x])); badge = z => o[z].avg_free.toFixed(2); }
+    const v = stratView();
+    v.guesses.forEach(x => guessed.add(x.z));
+    secret = s.secret;
+    if (v.found) { remaining = new Set([s.secret]); won = s.secret; }
+    else { remaining = new Set(v.pool); current = v.node.g; }
+  }
+  const q = state.query.trim().toLowerCase();
+  const groupMembers = state.group ? new Set(groupOf(state.group).members) : null;
+  for (const e of ELEMENTS) {
+    const t = tiles[e.number], z = e.number;
+    let dim = false;
+    if (m === "explore") {
+      if (groupMembers && !groupMembers.has(z)) dim = true;
+      if (q && !(e.name.toLowerCase().includes(q) || e.symbol.toLowerCase() === q || String(z) === q)) dim = true;
+    }
+    t.classList.toggle("dim", dim);
+    t.classList.toggle("out", !!remaining && !remaining.has(z) && !guessed.has(z));
+    t.classList.toggle("guessed", guessed.has(z));
+    t.classList.toggle("current", current === z && won !== z);
+    t.classList.toggle("secret", secret === z && won !== z);
+    t.classList.toggle("won", won === z);
+    t.classList.toggle("sel", m === "explore" && state.sel === z);
+    const b = t.querySelector(".badge");
+    if (badge) {
+      const v = badge(z); b.hidden = false; b.textContent = v;
+      b.style.background = badgeColor(state.strat.overlay === "depth" ? Number(v) : Number(v));
+      b.style.color = "#0a0d14";
+    } else b.hidden = true;
+  }
+}
+function badgeColor(v) {
+  if (state.strat.overlay === "depth") {
+    return ["", "var(--hit)", "var(--hit)", "#8fc46a", "var(--near)", "var(--bad)", "var(--bad)", "var(--bad)", "var(--bad)"][Math.min(v, 8)];
+  }
+  const vals = DATA.openers.map(o => o.avg_free), lo = Math.min(...vals), hi = Math.max(...vals);
+  const t = (v - lo) / (hi - lo);
+  return t < 0.15 ? "var(--hit)" : t < 0.4 ? "#8fc46a" : t < 0.7 ? "var(--near)" : "var(--bad)";
+}
+
+/* ---------- bay ---------- */
+function renderBay(hoverZ) {
+  const m = state.mode;
+  if (m === "explore" && hoverZ == null && state.focus === "group" && state.group) {
+    const g = groupOf(state.group), fl = firstAndLatest(g.members);
+    bay.innerHTML = `<div class="gcard ${g.cls}">
+      <p class="eyebrow"><i class="swatch"></i>${g.kindLabel} · ${g.members.length} ${g.members.length === 1 ? "element" : "elements"}</p>
+      <h2>${esc(g.name)}</h2>
+      <p class="gsum">${esc(g.summary)}</p>
+      <div class="firsts"><span class="lab">First</span>${whenHTML(fl.first)}<span class="lab">Latest</span>${whenHTML(fl.latest)}</div></div>`;
+  } else if (m === "explore" && (hoverZ ?? state.sel) == null) {
+    bay.innerHTML = `<p class="status">Pick an element</p>
+      <p class="sub">Hover over any tile to read about it, or click to pin it. Click a category or collection under the table for its story.</p>`;
+  } else if (m === "explore") {
+    const e = el(hoverZ ?? state.sel);
+    bay.innerHTML = `<div class="card">
+      <div class="bigtile cat-${CAT_CLASS[e.category]}"><span class="z">${e.number}</span><span class="sym">${esc(e.symbol)}</span><span class="m">${e.atomic_mass || "—"}</span></div>
+      <div><h2>${esc(e.name)}</h2>
+        <div class="catline"><span class="chip cat-${CAT_CLASS[e.category]}">${esc(CAT_LABEL[e.category])}</span>
+        <span>Period ${e.period} · Group ${e.group}</span><span>${esc(e.phase)}</span><span>Discovered: ${esc(e.year_label)}</span></div></div>
+      <p class="fact">${esc(e.fun_fact)}</p></div>`;
+  } else if (m === "play") {
+    const g = state.game, rem = consistent(g.guesses);
+    let status, sub;
+    if (g.picking) { status = "Click an element to make it the secret"; sub = "It stays hidden. Then guess it like normal."; }
+    else if (isWon()) { status = `Found <em>${esc(el(g.secret).name)}</em> in ${g.guesses.length} ${g.guesses.length === 1 ? "guess" : "guesses"}`; sub = `The best possible worst case is ${DATA.optimal_worst}. Start a new game or open Strategy to compare.`; }
+    else if (g.revealed) { status = `It was <em>${esc(el(g.secret).name)}</em>`; sub = "The dashed tile marks it."; }
+    else if (!g.guesses.length) { status = "Guess the secret element"; sub = "Click any element. Grey tiles are ruled out as you go; any element can still be guessed."; }
+    else { status = `<em>${rem.length}</em> ${rem.length === 1 ? "element fits" : "elements fit"} the clues`; sub = rem.length <= 12 ? rem.map(z => el(z).symbol).join(" · ") : "Grey tiles are ruled out."; }
+    const last = g.guesses.slice(-3);
+    bay.innerHTML = `<p class="status">${status}</p><p class="sub">${sub}</p>
+      <div class="rows">${last.map((x, i) => rowHTML(g.guesses.length - last.length + i, x.z, x.fb)).join("")}</div>`;
+  } else {
+    const s = state.strat, st = STRATS[s.key], v = stratView(), n = s.path.length + 1, g = el(v.node.g);
+    if (v.found) {
+      bay.innerHTML = `<p class="status">Guess ${n}: <em>${esc(g.name)}</em> — found it</p>
+        <p class="sub">${esc(st.label)} needs ${n} ${n === 1 ? "guess" : "guesses"} for ${esc(g.name)}. Step back with the trail below to see the other branches.</p>`;
+    } else {
+      const groups = partition(v.pool, v.node.g).length;
+      bay.innerHTML = `<p class="status">${n === 1 ? `${esc(st.label)} opens with` : `Guess ${n}:`} <em>${esc(g.name)}</em></p>
+        <p class="sub">${v.pool.length} ${v.pool.length === 1 ? "element is" : "elements are"} possible here (lit on the table). Its answers split them into ${groups} ${groups === 1 ? "group" : "groups"}. Follow one in the strategy tree below, or click any element to jump to the end of its path. Tile numbers: guesses this strategy needs for that element.</p>`;
+    }
+  }
+}
+
+/* ---------- toolbar ---------- */
+const toolbar = document.getElementById("toolbar");
+function renderToolbar() {
+  const m = state.mode;
+  if (m === "explore") {
+    toolbar.innerHTML = `<div class="lead">The periodic table<small>Hover to read, click to pin. Click a category or collection under the table for its story.</small></div>
+      <input type="search" id="q" placeholder="Find: name, symbol or number" value="${esc(state.query)}" aria-label="Find an element">`;
+  } else if (m === "play") {
+    const g = state.game;
+    toolbar.innerHTML = `<div class="lead">Play<small>Symbol letters: green right spot, yellow wrong spot. Arrow points toward the secret. Category: green if it matches.</small></div>
+      <button class="btn primary" data-act="new">New random game</button>
+      <button class="btn" data-act="pick" aria-pressed="${g.picking}">Choose the secret</button>
+      <button class="btn" data-act="hint" ${isWon() || g.revealed ? "disabled" : ""}>Hint</button>
+      <button class="btn" data-act="undo" ${g.guesses.length && !isWon() ? "" : "disabled"}>Undo</button>
+      <button class="btn" data-act="reveal" ${isWon() || g.revealed ? "disabled" : ""}>Reveal</button>`;
+  } else {
+    const s = state.strat;
+    toolbar.innerHTML = `<div class="lead">Strategy<small>Walk a strategy's decision tree, or click an element to see how it gets found.</small></div>
+      <div class="seg" role="group" aria-label="Strategy">${STRAT_KEYS.map(k => `<button data-strat="${k}" aria-pressed="${s.key === k}">${esc(STRATS[k].label)}</button>`).join("")}</div>
+      <div class="seg" role="group" aria-label="Tile numbers"><button data-overlay="depth" aria-pressed="${s.overlay === "depth"}">Guesses to find</button><button data-overlay="opener" aria-pressed="${s.overlay === "opener"}">Average as opener</button></div>`;
+  }
+}
+toolbar.addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  const g = state.game;
+  if (b.dataset.act === "new") newGame();
+  if (b.dataset.act === "pick") g.picking = !g.picking;
+  if (b.dataset.act === "undo") g.guesses.pop();
+  if (b.dataset.act === "reveal") g.revealed = true;
+  if (b.dataset.act === "hint") { state.hint = hint(); }
+  else state.hint = null;
+  if (b.dataset.strat) setStrategy(b.dataset.strat);
+  if (b.dataset.overlay) state.strat.overlay = b.dataset.overlay;
+  render();
+});
+toolbar.addEventListener("input", ev => {
+  if (ev.target.id === "q") { state.query = ev.target.value; paintTiles(); }
+});
+
+function setStrategy(key) {
+  state.strat.key = key;
+  state.strat.path = state.strat.secret ? pathTo(key, state.strat.secret) : [];
+}
+
+/* Hint: follow the best-worst-case tree while the player is on it; otherwise
+   pick the guess whose biggest leftover group is smallest. */
+function hint() {
+  const g = state.game, rem = consistent(g.guesses);
+  let node = STRATS.optimal.tree;
+  for (const x of g.guesses) { if (!node || node.g !== x.z) { node = null; break; } node = node.k[x.fb]; }
+  if (node) return { z: node.g, how: "This is the optimal strategy's move. You are still on its path." };
+  if (rem.length === 1) return { z: rem[0], how: "Only one element fits." };
+  let best = null;
+  for (const z of ALL) {
+    const parts = partition(rem, z);
+    const inside = rem.includes(z);
+    if (!inside && parts.length < 2) continue;
+    const worst = parts.length ? parts[0][1].length : 0;
+    const spread = parts.reduce((a, p) => a + p[1].length ** 2, 0) / rem.length;
+    const score = [worst, spread, inside ? 0 : 1];
+    if (!best || score[0] < best.s[0] || (score[0] === best.s[0] && (score[1] < best.s[1] || (score[1] === best.s[1] && score[2] < best.s[2])))) best = { z, s: score };
+  }
+  return { z: best.z, how: `You left the optimal path, so this is a quick estimate: it leaves at most ${best.s[0]} ${best.s[0] === 1 ? "candidate" : "candidates"} whatever the answer.` };
+}
+
+/* ---------- legend ---------- */
+const legend = document.getElementById("legend");
+function renderLegend() {
+  const counts = {}; for (const e of ELEMENTS) counts[e.category] = (counts[e.category] || 0) + 1;
+  const on = (kind, id) => state.group && state.group.kind === kind && state.group.id === id;
+  legend.innerHTML = `<div class="legend-row"><span class="legend-label">Categories</span>
+      ${CATS.map(([k, c, l]) => `<button class="cat-${c}" data-cat="${k}" aria-pressed="${on("cat", k)}"><i></i>${l}<span>${counts[k]}</span></button>`).join("")}</div>
+    <div class="legend-row collections"><span class="legend-label">Collections</span>
+      ${GROUPS.collections.map(c => `<button data-col="${c.id}" aria-pressed="${on("col", c.id)}">${esc(c.name)}<span>${c.members.length}</span></button>`).join("")}</div>`;
+}
+legend.addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  const g = b.dataset.cat ? { kind: "cat", id: b.dataset.cat } : { kind: "col", id: b.dataset.col };
+  const same = state.group && state.group.kind === g.kind && state.group.id === g.id;
+  state.group = same ? null : g;
+  state.focus = same ? "element" : "group";
+  if (state.mode !== "explore") setMode("explore");
+  render();
+  if (!same) document.getElementById("ptable").scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+/* ---------- below the table ---------- */
+const below = document.getElementById("below");
+function renderBelow() {
+  const m = state.mode;
+  if (m === "explore" && state.focus === "group" && state.group) {
+    const g = groupOf(state.group);
+    const byYear = new Map();
+    for (const z of [...g.members].sort((a, b) => yearKey(a) - yearKey(b) || a - b)) {
+      const k = el(z).year_label; if (!byYear.has(k)) byYear.set(k, []); byYear.get(k).push(z);
+    }
+    const timeline = [...byYear.entries()].map(([y, zs]) => `<div class="tl-row"><span class="tl-year">${esc(y)}</span><div class="members">${zs.map(z => miniHTML(z, true)).join("")}</div></div>`).join("");
+    const sections = g.sections.length
+      ? g.sections.map(([h, t]) => `<p class="eyebrow">${esc(h)}</p><p>${esc(t)}</p>`).join("")
+      : `<p class="eyebrow">About</p><p>${esc(g.summary)}</p>`;
+    below.innerHTML = `<div class="below">
+      <div class="panel"><h3>${esc(g.name)}</h3><div class="prose gprose">${sections}</div></div>
+      <div class="panel"><p class="eyebrow">Discovery timeline</p><h3>In order of discovery</h3>
+        <div class="timeline">${timeline}</div>
+        <p class="muted" style="font-size:var(--step--1);margin:12px 0 0">Years are the commonly cited dates of discovery or first isolation; several were disputed or happened in stages.</p></div></div>`;
+  } else if (m === "explore" && state.sel == null) {
+    below.innerHTML = "";
+  } else if (m === "explore") {
+    const e = el(state.sel);
+    const k = (v, u = "") => v === "" || v == null ? "—" : `${v}${u}`;
+    const toC = v => v === "" || v == null ? "—" : `${Number(v).toLocaleString("en-US", { maximumFractionDigits: 1 })} K (${(v - 273.15).toLocaleString("en-US", { maximumFractionDigits: 0 })} °C)`;
+    below.innerHTML = `<div class="below">
+      <div class="panel"><p class="eyebrow">${e.number} · ${esc(e.symbol)}</p><h3>${esc(e.name)}</h3>
+        <div class="prose"><p>${esc(e.summary)}</p></div>
+        ${elementPhoto(e.number)}
+        ${collectionsOf(e.number).length ? `<p class="eyebrow" style="margin-top:16px">Also in</p><div class="inchips">${collectionsOf(e.number).map(c => `<button class="inchip" data-col="${c.id}">${esc(c.name)}</button>`).join("")}</div>` : ""}</div>
+      <div class="panel"><p class="eyebrow">Properties</p>
+        <dl class="stats">
+          <div><dt>Atomic mass</dt><dd>${k(e.atomic_mass, " u")}</dd></div>
+          <div><dt>Phase at 0 °C</dt><dd>${esc(e.phase)}</dd></div>
+          <div><dt>Density</dt><dd>${k(e.density, e.phase === "Gas" ? " g/L" : " g/cm³")}</dd></div>
+          <div><dt>Electronegativity</dt><dd>${k(e.electronegativity)}</dd></div>
+          <div><dt>Melts</dt><dd>${toC(e.melt_k)}</dd></div>
+          <div><dt>Boils</dt><dd>${toC(e.boil_k)}</dd></div>
+          <div><dt>Electron configuration</dt><dd>${esc(e.electron_config)}</dd></div>
+          <div><dt>Discovered</dt><dd>${esc(e.year_label)}</dd></div>
+          <div><dt>Discovered by</dt><dd style="font-family:var(--font-body)">${esc(e.discovered_by || "Known since antiquity")}</dd></div>
+        </dl></div></div>`;
+  } else if (m === "play") {
+    const g = state.game, rem = consistent(g.guesses);
+    const h = state.hint;
+    below.innerHTML = `<div class="below">
+      <div class="panel"><h3>Your guesses</h3>
+        ${g.guesses.length ? `<div class="rows">${g.guesses.map((x, i) => rowHTML(i, x.z, x.fb)).join("")}</div>` : `<p class="muted">No guesses yet. Tantalum, around the middle at 73, is a solid first guess. Open Strategy to see why and what beats it.</p>`}
+        ${h ? `<p style="margin:14px 0 0">Hint: try <b>${esc(el(h.z).name)}</b> (${esc(el(h.z).symbol)}). <span class="muted">${esc(h.how)}</span></p>` : ""}
+      </div>
+      <div class="panel"><h3>${isWon() || g.revealed ? "Answer" : `Still possible <span class="count">${rem.length}</span>`}</h3>
+        <div class="groups"><div class="members">${(isWon() || g.revealed ? [g.secret] : rem).map(z => miniHTML(z)).join("")}</div></div>
+        ${isWon() || g.revealed ? elementPhoto(g.secret) : ""}
+      </div></div>`;
+  } else {
+    below.innerHTML = renderStrategyPanels();
+  }
+}
+
+function renderStrategyPanels() {
+  const s = state.strat, st = STRATS[s.key], d = depthMap(s.key), v = stratView();
+  const n = s.path.length + 1, g = v.node.g;
+  const trail = v.guesses.map((x, i) => rowHTML(i, x.z, x.fb, "", `click ${i === v.guesses.length - 1 ? "active" : ""}`)).join("");
+  let body;
+  if (v.found) {
+    body = `<div class="rows">${rowHTML(n - 1, g, FB[g][g], " · found", "active")}</div>`;
+  } else {
+    const parts = partition(v.pool, g);
+    const items = [];
+    if (v.pool.includes(g)) items.push(`<div class="group"><div class="key">${fbHTML(g, FB[g][g], true)}<span class="count">1</span></div>
+      <div class="members">${miniHTML(g, true)}<span class="count">found on this guess</span></div></div>`);
+    for (const [key, members] of parts) {
+      const more = Math.max(...members.map(z => d[z])) - n;
+      items.push(`<button class="group branch" data-key="${esc(key)}"><div class="key">${fbHTML(g, key, true)}<span class="count">${members.length}</span></div>
+        <div class="members">${members.map(z => miniHTML(z)).join("")}<span class="more">${more === 1 ? "1 more guess" : `up to ${more} more`} ›</span></div></button>`);
+    }
+    body = `<h3>Guess ${n}: ${esc(el(g).name)} (${esc(el(g).symbol)}). Which answer did you get?</h3>
+      <div class="groups">${items.join("")}</div>`;
+  }
+  const max = Math.max(...Object.values(st.histogram));
+  const hist = Object.entries(st.histogram).map(([k, val]) =>
+    `<span class="lab">${k} ${k === "1" ? "guess" : "guesses"}</span><span class="bar"><i style="width:${(val / max) * 100}%"></i></span><span class="val">${val}</span>`).join("");
+  const worstList = ALL.filter(z => d[z] === st.worst);
+  return `<div class="panel" style="margin-top:22px">
+      <div class="treehead"><div><p class="eyebrow">${esc(st.label)} · strategy tree</p>
+        <p class="muted" style="margin:0;font-size:var(--step--1)">Each group is one possible answer; open it to see the next guess.</p></div>
+        <div class="steps" style="margin:0"><button class="btn" data-nav="start" ${s.path.length || v.found ? "" : "disabled"}>Back to start</button>
+        <button class="btn" data-nav="up" ${s.path.length ? "" : "disabled"}>Up one guess</button></div></div>
+      ${trail ? `<div class="rows trail">${trail}</div>` : ""}
+      ${body}</div>
+    <div class="below">
+      <div class="panel"><p class="eyebrow">Hardest for this strategy · ${st.worst} guesses</p>
+        <div class="members" style="display:flex;flex-wrap:wrap;gap:3px">${worstList.map(z => miniHTML(z, true)).join("")}</div></div>
+      <div class="panel"><p class="eyebrow">${esc(st.label)} · opens with ${esc(el(st.tree.g).name)}</p>
+        <h3>Average ${st.average.toFixed(3)} guesses, never more than ${st.worst}</h3>
+        <div class="hist">${hist}</div></div></div>`;
+}
+below.addEventListener("click", ev => {
+  if (state.mode === "explore") {
+    const mini = ev.target.closest("button.mini"), chip = ev.target.closest(".inchip");
+    if (mini) { state.sel = Number(mini.dataset.z); state.focus = "element"; render(); }
+    else if (chip) { state.group = { kind: "col", id: chip.dataset.col }; state.focus = "group"; render(); }
+    return;
+  }
+  if (state.mode !== "strategy") return;
+  const s = state.strat;
+  const mini = ev.target.closest("button.mini");
+  const branch = ev.target.closest("button.branch");
+  const row = ev.target.closest(".trail .row");
+  const nav = ev.target.closest("[data-nav]");
+  if (mini) showHunt(Number(mini.dataset.z));
+  else if (branch) {
+    s.path = [...s.path, branch.dataset.key];
+    if (s.secret != null && !stratView().pool.includes(s.secret)) s.secret = null;
+  } else if (row) s.path = s.path.slice(0, Number(row.dataset.step) + 1);
+  else if (nav?.dataset.nav === "start") { s.path = []; s.secret = null; }
+  else if (nav?.dataset.nav === "up") s.path = s.path.slice(0, -1);
+  else return;
+  render();
+});
+
+/* ---------- research ---------- */
+const research = document.getElementById("research");
+function renderResearch() {
+  const S = STRATS, O = DATA.openers;
+  const rows = STRAT_KEYS.map(k => {
+    const s = S[k], h = s.histogram;
+    return `<tr class="pick ${state.strat.key === k ? "on" : ""}" data-strat="${k}"><td><b>${esc(s.label)}</b></td><td>${esc(el(s.tree.g).name)} (${esc(el(s.tree.g).symbol)})</td>
+      <td class="num">${s.worst}</td><td class="num">${s.average.toFixed(3)}</td>
+      ${[1, 2, 3, 4, 5, 6, 7].map(i => `<td class="num">${h[i] || "·"}</td>`).join("")}</tr>`;
+  }).join("");
+  const byWorst = [...O].sort((a, b) => a.worst - b.worst || a.avg_at_worst - b.avg_at_worst);
+  const byAvg = [...O].sort((a, b) => a.avg_free - b.avg_free);
+  const rankAvg = byAvg.findIndex(o => o.symbol === "Ta") + 1;
+  const ta = O.find(o => o.symbol === "Ta");
+  const bestW = byWorst[0], bestA = byAvg[0];
+  const nWorstOpt = O.filter(o => o.worst === DATA.optimal_worst).length;
+
+  research.innerHTML = `<div class="wrap-in">
+    <h2>What the search found</h2>
+    <p class="lede">Every strategy here was computed exactly by searching all decision trees over the 118 elements. Any element may be guessed, even one already ruled out.</p>
+    <div class="panel scroll-x"><table class="compare">
+      <thead><tr><th>Strategy</th><th>Opens with</th><th class="num">Worst</th><th class="num">Average</th>${[1, 2, 3, 4, 5, 6, 7].map(i => `<th class="num">in ${i}</th>`).join("")}</tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="panel prose findings" style="margin-top:20px">
+      <p class="eyebrow">Findings</p>
+      <!--__FINDINGS__-->
+    </div>
+    <div class="panel" style="margin-top:20px">
+      <p class="eyebrow">Every opener, ranked by average with the best follow-up</p>
+      <h3>How good is each first guess?</h3>
+      <p class="muted" style="margin:0 0 10px;font-size:var(--step--1)">Bar length is the average number of guesses with the best follow-up. Green bars can still guarantee ${DATA.optimal_worst} guesses; amber bars need ${DATA.optimal_worst + 1} in their worst case. Tantalum ranks ${rankAvg} of 118.</p>
+      <div class="scroll-x">${openerChart(byAvg)}</div>
+    </div></div>`;
+  const vars = { W: DATA.optimal_worst, bestW: bestW.symbol, bestWname: el(bestW.z).name, bestWavg: bestW.avg_at_worst.toFixed(3),
+    bestA: bestA.symbol, bestAname: el(bestA.z).name, bestAavg: bestA.avg_free.toFixed(3), bestAworst: bestA.worst,
+    taWorst: ta.worst, taAvg: ta.avg_free.toFixed(3), taAvgW: ta.avg_at_worst.toFixed(3), taRank: rankAvg, nWorstOpt, taClasses: ta.groups, taLargest: ta.largest, nDiffer: O.filter(o => o.avg_free < o.avg_at_worst).length };
+  research.querySelector(".prose").innerHTML = research.querySelector(".prose").innerHTML.replace(/\{(\w+)\}/g, (m, k) => k in vars ? vars[k] : m);
+}
+function openerChart(list) {
+  const top = list.slice(0, 40);
+  const rowH = 17, left = 112, w = 760, h = top.length * rowH + 26;
+  const lo = Math.floor(top[0].avg_free * 10) / 10 - 0.05, hi = Math.ceil(top[top.length - 1].avg_free * 10) / 10;
+  const x = v => left + ((v - lo) / (hi - lo)) * (w - left - 60);
+  const colors = { 4: "var(--hit)", 5: "var(--hit)", 6: "var(--near)", 7: "var(--bad)" };
+  const ticks = []; for (let t = Math.ceil(lo * 10) / 10; t <= hi + 1e-9; t += 0.1) ticks.push(t);
+  return `<svg class="opener-chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="Top 40 openers by average guesses" style="min-width:560px">
+    ${ticks.map(t => `<line x1="${x(t)}" x2="${x(t)}" y1="0" y2="${h - 20}" stroke="var(--line)"/><text x="${x(t)}" y="${h - 6}" text-anchor="middle">${t.toFixed(1)}</text>`).join("")}
+    ${top.map((o, i) => {
+      const y = i * rowH + 2, isTa = o.symbol === "Ta";
+      return `<text class="lbl" x="${left - 8}" y="${y + 11}" text-anchor="end" style="${isTa ? "fill:var(--accent)" : ""}">${i + 1}. ${esc(el(o.z).name)}</text>
+        <rect x="${left}" y="${y + 2}" width="${Math.max(2, x(o.avg_free) - left)}" height="${rowH - 6}" fill="${colors[o.worst] || "var(--bad)"}" opacity="${isTa ? 1 : 0.75}"/>
+        <text x="${x(o.avg_free) + 6}" y="${y + 11}">${o.avg_free.toFixed(3)} · max ${o.worst}</text>`;
+    }).join("")}
+  </svg>`;
+}
+research.addEventListener("click", ev => {
+  const tr = ev.target.closest("tr[data-strat]");
+  if (tr) { setStrategy(tr.dataset.strat); render(); }
+});
+
+/* In Explore, double-clicking a tile or clicking blank space unpins the
+   element. A highlighted category or collection stays, and its details
+   come back. Clicks on text, panels and controls don't count as blank. */
+const BLANK = "html, body, main, .wrap, .toolbar, .table-scroll, .ptable, .gaprow, .slot, .legend, .legend-row, #below, .below";
+function unpin() {
+  if (state.sel == null) return;
+  state.sel = null;
+  state.focus = state.group ? "group" : "element";
+  render();
+}
+document.addEventListener("click", ev => {
+  if (state.mode === "explore" && ev.target.matches(BLANK)) unpin();
+});
+table.addEventListener("dblclick", ev => {
+  if (state.mode === "explore" && ev.target.closest(".tile")) unpin();
+});
+
+/* ---------- mode & render ---------- */
+document.querySelector(".tabs").addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-mode]"); if (b) setMode(b.dataset.mode);
+});
+function setMode(m) {
+  state.mode = m; state.hint = null;
+  document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.mode === m)));
+  try { history.replaceState(null, "", "#" + m); } catch (e) {}
+  render();
+}
+function render() {
+  renderToolbar(); renderBay(); paintTiles(); renderLegend(); renderBelow();
+  research.hidden = state.mode !== "strategy";
+  if (state.mode === "strategy") renderResearch();
+}
+function start(saved) {
+  if (saved && saved.state) Object.assign(state, saved.state);
+  if (!Array.isArray(state.strat.path)) { state.strat.path = []; state.strat.secret = null; }
+  if (!state.focus) state.focus = "element";
+  delete state.cat;
+  const h = (location.hash || "").slice(1);
+  if (!saved?.state && ["explore", "play", "strategy"].includes(h)) state.mode = h;
+  setMode(state.mode);
+}
+window.claude?.hot?.snapshot?.(() => ({ state }));
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>

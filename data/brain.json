@@ -1,0 +1,289 @@
+{
+  "sources": {
+    "nimh": {
+      "name": "NIMH · Get to Know Your Brain",
+      "url": "https://www.nimh.nih.gov/news/media/2023/get-to-know-your-brain"
+    },
+    "landmarks": {
+      "name": "Society for Neuroscience · Major Brain Landmarks",
+      "url": "https://www.brainfacts.org/brain-anatomy-and-function/anatomy/2022/major-brain-landmarks-110822"
+    },
+    "memory": {
+      "name": "UTHealth · Hippocampus",
+      "url": "https://nba.uth.tmc.edu/neuroscience/m/s4/chapter05.html"
+    },
+    "homeostasis": {
+      "name": "MedlinePlus · Hypothalamus",
+      "url": "https://medlineplus.gov/ency/article/002380.htm"
+    },
+    "callosum": {
+      "name": "UCL / Corpal · Corpus callosum",
+      "url": "https://discovery.ucl.ac.uk/id/eprint/10185689/1/Corpal_Information_Booklet_SEPT_2021_ONLINE.pdf"
+    },
+    "hpa": {
+      "name": "NIDDK · Adrenal hormones and their control",
+      "url": "https://www.niddk.nih.gov/health-information/endocrine-diseases/adrenal-insufficiency-addisons-disease/definition-facts"
+    },
+    "components": {
+      "name": "MedlinePlus · Brain components",
+      "url": "https://medlineplus.gov/ency/anatomyvideos/000016.htm"
+    }
+  },
+  "regions": [
+    {
+      "id": "frontal",
+      "name": "Frontal lobe",
+      "he": "האונה המצחית",
+      "view": "surface",
+      "role": "Planning and problem-solving",
+      "detail": "Includes areas involved in complex thinking and voluntary movement. Planning depends on connections with other regions.",
+      "clue": "I sit toward the front and include areas involved in planning.",
+      "source": "components",
+      "color": "#c9a274",
+      "path": "M99 293 C65 226 91 145 151 108 C197 77 245 67 294 76 L282 132 L263 181 L268 229 L237 274 L188 307 Z",
+      "label": [
+        172,
+        210
+      ]
+    },
+    {
+      "id": "parietal",
+      "name": "Parietal lobe",
+      "he": "האונה הקודקודית",
+      "view": "surface",
+      "role": "Integrating sensory information",
+      "detail": "Helps combine sensory information and supports spatial processing. It works with other cortical areas.",
+      "clue": "Near the top, I help combine sensory and spatial information.",
+      "source": "nimh",
+      "color": "#88b8ad",
+      "path": "M294 76 C359 63 425 88 469 123 L442 173 L417 212 L361 246 L303 242 L268 229 L263 181 L282 132 Z",
+      "label": [
+        358,
+        162
+      ]
+    },
+    {
+      "id": "occipital",
+      "name": "Occipital lobe",
+      "he": "האונה העורפית",
+      "view": "surface",
+      "role": "Processing visual information",
+      "detail": "Contains major visual-processing areas at the back of the cerebrum. Seeing also involves other regions.",
+      "clue": "At the back of the cerebrum, I contain major visual-processing areas.",
+      "source": "nimh",
+      "color": "#b3a5c9",
+      "path": "M469 123 C520 151 547 197 538 249 C531 288 507 308 471 316 L417 292 L405 251 L417 212 L442 173 Z",
+      "label": [
+        484,
+        239
+      ]
+    },
+    {
+      "id": "temporal",
+      "name": "Temporal lobe",
+      "he": "האונה הרקתית",
+      "view": "surface",
+      "role": "Hearing and sound processing",
+      "detail": "Includes areas involved in hearing. Deeper temporal structures also contribute to memory and emotional learning.",
+      "clue": "At the side, I include important hearing-related areas.",
+      "source": "components",
+      "color": "#cf9290",
+      "path": "M99 293 L188 307 L237 274 L268 229 L303 242 L361 246 L405 251 L417 292 L397 340 C339 373 271 373 206 354 C149 348 117 332 99 293 Z",
+      "label": [
+        281,
+        318
+      ]
+    },
+    {
+      "id": "cerebellum",
+      "name": "Cerebellum",
+      "he": "המוחון",
+      "view": "surface",
+      "role": "Coordinating movement and balance",
+      "detail": "Helps coordinate movement and balance. It is not the sole source of movement commands.",
+      "clue": "Behind the brainstem, I help coordinate movement and balance.",
+      "source": "nimh",
+      "color": "#90b5c9",
+      "path": "M407 335 C458 311 505 330 517 370 C530 411 493 439 445 430 C411 424 388 399 393 373 Z",
+      "label": [
+        454,
+        383
+      ]
+    },
+    {
+      "id": "brainstem",
+      "name": "Brainstem",
+      "he": "גזע המוח",
+      "view": "surface",
+      "role": "Supporting vital automatic functions",
+      "detail": "Contains circuits important for breathing and heart-rate regulation, and pathways between brain and body.",
+      "clue": "I connect toward the spinal cord and contain vital automatic-control circuits.",
+      "source": "nimh",
+      "color": "#b6b981",
+      "path": "M341 365 L379 353 L403 377 L388 412 L401 465 L375 474 L352 420 Z",
+      "label": [
+        374,
+        410
+      ]
+    },
+    {
+      "id": "callosum",
+      "name": "Corpus callosum",
+      "he": "כפיס המוח",
+      "view": "inside",
+      "role": "Connecting the cerebral hemispheres",
+      "detail": "A large bundle of nerve fibers linking the two cerebral hemispheres. It is not their only connection.",
+      "clue": "I am a large fiber bridge between the two cerebral hemispheres.",
+      "source": "callosum",
+      "color": "#d3c58c",
+      "path": "M190 234 C170 169 216 123 286 119 C359 112 415 145 427 191 L400 205 C388 174 342 149 289 153 C237 155 214 184 218 224 Z",
+      "label": [
+        300,
+        141
+      ]
+    },
+    {
+      "id": "thalamus",
+      "name": "Thalamus",
+      "he": "תלמוס",
+      "view": "inside",
+      "role": "Relaying and integrating information",
+      "detail": "A major relay for many sensory signals traveling to the cortex. Different thalamic nuclei have different roles.",
+      "clue": "Deep inside, I relay many sensory signals toward the cortex.",
+      "source": "landmarks",
+      "color": "#a8b9d0",
+      "ellipse": [
+        302,
+        226,
+        46,
+        29
+      ],
+      "label": [
+        302,
+        226
+      ]
+    },
+    {
+      "id": "hypothalamus",
+      "name": "Hypothalamus",
+      "he": "היפותלמוס",
+      "view": "inside",
+      "role": "Regulating internal body conditions",
+      "detail": "Helps regulate temperature, hunger, thirst, sleep, and pituitary activity.",
+      "clue": "Below the thalamus, I help regulate temperature and hormone signaling.",
+      "source": "homeostasis",
+      "color": "#d6ac77",
+      "ellipse": [
+        288,
+        279,
+        29,
+        17
+      ],
+      "label": [
+        288,
+        279
+      ]
+    },
+    {
+      "id": "pituitary",
+      "name": "Pituitary gland",
+      "he": "בלוטת יותרת המוח",
+      "view": "inside",
+      "role": "Sending hormonal signals",
+      "detail": "Its anterior part releases ACTH, which signals the adrenal glands to produce cortisol.",
+      "clue": "A gland beneath the brain, I release ACTH into the bloodstream.",
+      "source": "hpa",
+      "color": "#d696b0",
+      "ellipse": [
+        255,
+        334,
+        17,
+        16
+      ],
+      "label": [
+        255,
+        334
+      ]
+    },
+    {
+      "id": "hippocampus",
+      "name": "Hippocampus",
+      "he": "היפוקמפוס",
+      "view": "inside",
+      "role": "Helping form new episodic memories",
+      "detail": "Contributes to forming memories of events and their context. Memory is distributed across multiple systems.",
+      "clue": "I help form new memories of events and their context.",
+      "source": "memory",
+      "color": "#88c2ac",
+      "path": "M358 285 C410 268 422 318 388 343 C362 363 318 361 285 345 L294 326 C328 340 359 342 378 326 C395 312 385 297 364 306 Z",
+      "label": [
+        351,
+        340
+      ]
+    },
+    {
+      "id": "amygdala",
+      "name": "Amygdala",
+      "he": "אמיגדלה",
+      "view": "inside",
+      "role": "Contributing to emotional learning",
+      "detail": "Helps link significance and emotion with experiences. It works in networks, rather than acting as a single fear switch.",
+      "clue": "I help connect experiences with emotional significance.",
+      "source": "landmarks",
+      "color": "#cf9290",
+      "ellipse": [
+        245,
+        354,
+        15,
+        13
+      ],
+      "label": [
+        245,
+        354
+      ]
+    }
+  ],
+  "myths": [
+    {
+      "claim": "Cortisol is made in the amygdala.",
+      "landmark": "amygdala",
+      "answer": false,
+      "explanation": "Cortisol is produced by the adrenal glands, outside the brain.",
+      "source": "hpa"
+    },
+    {
+      "claim": "The pituitary sends ACTH signals to the adrenal glands.",
+      "landmark": "pituitary",
+      "answer": true,
+      "explanation": "ACTH is one link in the hypothalamus–pituitary–adrenal pathway.",
+      "source": "hpa"
+    },
+    {
+      "claim": "The corpus callosum is a large connection between the cerebral hemispheres.",
+      "landmark": "callosum",
+      "answer": true,
+      "explanation": "Its nerve fibers carry information between hemispheres.",
+      "source": "callosum"
+    },
+    {
+      "claim": "The cerebellum contributes to balance and coordinated movement.",
+      "landmark": "cerebellum",
+      "answer": true,
+      "explanation": "Movement coordination is one of its major roles.",
+      "source": "nimh"
+    },
+    {
+      "claim": "Every function can be assigned to exactly one brain region.",
+      "answer": false,
+      "explanation": "The structures in this atlas interact; a useful regional label is not a complete explanation of a behavior.",
+      "source": "landmarks"
+    },
+    {
+      "claim": "The hypothalamus helps regulate body temperature.",
+      "landmark": "hypothalamus",
+      "answer": true,
+      "explanation": "Temperature regulation is one of several homeostatic functions it supports.",
+      "source": "homeostasis"
+    }
+  ]
+}
